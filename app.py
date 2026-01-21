@@ -16,26 +16,30 @@ st.set_page_config(
 AVATAR_URL = "https://kiwigeekperu.com/wp-content/uploads/2026/01/gatitow.webp"
 WHATSAPP_LINK = "https://api.whatsapp.com/send/?phone=51939081940&text=Hola%2C+me+gustar%C3%ADa+saber+m%C3%A1s+de+sus+productos&type=phone_number&app_absent=0"
 
-# --- CSS LIMPIO (Solo ajustes básicos de fuente, sin colores neón) ---
+# --- CSS MIXTO (Header Neón + Chat Limpio) ---
 def apply_custom_styles():
     st.markdown("""
         <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&display=swap');
         
-        /* Forzar fuente limpia */
+        /* Fuente general */
         * { 
             font-family: 'Inter', sans-serif !important; 
         }
         
-        /* Título principal limpio */
-        .main-title {
+        /* --- ESTILO NEÓN PARA EL HEADER (Recuperado) --- */
+        .neon-title {
+            color: #00FF41 !important;
+            text-shadow: 0 0 20px rgba(0,255,65,0.5);
             text-align: center;
-            font-weight: 700 !important;
-            font-size: 2.5rem !important;
-            margin-bottom: 20px;
-            color: #000000; /* Negro puro si el fondo es claro */
+            font-weight: 900 !important;
+            font-size: 3.5rem !important;
+            margin: 0;
+            line-height: 1.2;
         }
 
+        /* --- ESTILO LIMPIO PARA EL CHAT --- */
+        
         /* Ajustes para que el chat se vea limpio */
         .stChatMessage { 
             background: transparent !important; 
@@ -47,6 +51,7 @@ def apply_custom_styles():
             margin-top: 20px;
             font-size: 1.2rem;
             font-weight: bold;
+            color: #000 !important; /* Títulos del chat en negro */
         }
         
         /* Links simples y subrayados */
@@ -62,6 +67,12 @@ def apply_custom_styles():
             margin: 0 !important;
             border: none !important;
             list-style-type: disc !important;
+            color: #000 !important; /* Texto de lista en negro */
+        }
+        
+        /* Texto normal en negro */
+        .stMarkdown p {
+            color: #000 !important;
         }
         </style>
     """, unsafe_allow_html=True)
@@ -177,10 +188,12 @@ with st.sidebar:
             del st.session_state["chat_session"]
         st.rerun()
 
-# Título simple sin neón
+# HEADER CON LOGO Y NEON AI (Restaurado)
 st.markdown("""
     <div style="text-align:center; padding-bottom: 20px;">
-        <h1 class='main-title'>Cotizador Kiwigeek</h1>
+        <img src="https://kiwigeekperu.com/wp-content/uploads/2025/06/Diseno-sin-titulo-24.png" height="80">
+        <h1 class='neon-title'>AI</h1>
+        <p style='color:#666; font-size:0.9rem; margin-top: 10px;'>Cotizador Simple</p>
     </div>
 """, unsafe_allow_html=True)
 
