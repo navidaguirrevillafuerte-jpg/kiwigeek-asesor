@@ -36,7 +36,7 @@ USER_AVATARS = [
 def apply_custom_styles():
     st.markdown(f"""
         <style>
-        /* Force reload styles v4.2 - Strict Black Focus No Red */
+        /* Force reload styles v5.0 - Ultimate Black Border Fix */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
         
         * {{ font-family: 'Inter', sans-serif !important; }}
@@ -69,7 +69,7 @@ def apply_custom_styles():
             border-left: 4px solid {COLORS['kiwi_blue']} !important;
         }}
 
-        /* --- ESTILOS DEL INPUT DE CHAT (REFORZADO) --- */
+        /* --- ESTILOS DEL INPUT DE CHAT (REFORZADO V5) --- */
         
         /* Contenedor flotante del input */
         .stChatInputContainer {{
@@ -77,28 +77,39 @@ def apply_custom_styles():
             background: transparent !important;
         }}
 
-        /* Target específico al área de texto */
-        textarea[data-testid="stChatInputTextArea"] {{
-            background-color: #e8e8e8 !important; /* Gris claro */
-            color: #333333 !important; /* Texto gris oscuro */
-            caret-color: #000000 !important; /* Cursor negro */
-            border: 2px solid transparent !important; /* SIN BORDE por defecto */
+        /* ESTRATEGIA: Targetear el CONTENEDOR, no solo la caja de texto */
+        /* Esto elimina el estilo por defecto de Streamlit */
+        div[data-testid="stChatInput"] {{
             border-radius: 15px !important;
-            outline: none !important;
+            background-color: #e8e8e8 !important; /* Gris por defecto */
+            border: 2px solid transparent !important; /* Sin borde por defecto */
+            color: #333 !important;
+            box-shadow: none !important;
+        }}
+
+        /* AL HACER CLICK (FOCUS): Usamos focus-within en el padre */
+        div[data-testid="stChatInput"]:focus-within {{
+            background-color: #ffffff !important; /* Fondo blanco al escribir */
+            border: 2px solid #000000 !important; /* BORDE NEGRO PURO */
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
+        }}
+
+        /* Limpiar estilos internos de Streamlit que causan el borde rojo */
+        div[data-testid="stChatInput"] > div, div[data-baseweb="base-input"] {{
+            border: none !important;
+            background-color: transparent !important;
+            box-shadow: none !important;
+        }}
+
+        /* El área de texto en sí misma */
+        textarea[data-testid="stChatInputTextArea"] {{
+            background-color: transparent !important;
+            color: #333333 !important;
+            caret-color: #000000 !important; /* Cursor negro */
         }}
         
-        /* Placeholder del input */
         textarea[data-testid="stChatInputTextArea"]::placeholder {{
             color: #666666 !important;
-            opacity: 0.8 !important;
-        }}
-        
-        /* Efecto Focus (Al hacer click) - ELIMINAMOS ROJO */
-        textarea[data-testid="stChatInputTextArea"]:focus {{
-            border: 2px solid #000000 !important; /* BORDE NEGRO PURO */
-            outline: none !important; /* Mata el outline nativo (rojo/azul) */
-            background-color: #ffffff !important;
-            box-shadow: none !important; /* Mata cualquier sombra de color */
         }}
         
         /* --- AJUSTE CRÍTICO DE ANCHO Y CENTRADO --- */
