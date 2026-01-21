@@ -2,14 +2,14 @@ import streamlit as st
 import os
 import json
 import random
-import re # Importamos expresiones regulares para detectar el JSON
+import re
 from google import genai
 from google.genai import types
 
 # --- CONFIGURACIÓN DE LA PÁGINA ---
 st.set_page_config(
     page_title="Kiwigeek AI - Hardware Engineer",
-    page_icon="🐱",
+    page_icon="🥝",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
@@ -23,6 +23,21 @@ COLORS = {
 }
 AVATAR_URL = "https://kiwigeekperu.com/wp-content/uploads/2026/01/gatitow.webp"
 WHATSAPP_LINK = "https://api.whatsapp.com/send/?phone=51939081940&text=Hola%2C+me+gustar%C3%ADa+saber+m%C3%A1s+de+sus+productos&type=phone_number&app_absent=0"
+
+# --- ORDEN LÓGICO DE COMPONENTES (PYTHON SE ENCARGA DE ESTO) ---
+# No importa cómo lo mande la IA, Python lo forzará a este orden visual.
+COMPONENT_PRIORITY = {
+    "CPU": 1, "PROCESADOR": 1,
+    "PLACA": 2, "MOTHERBOARD": 2, "PLACA MADRE": 2,
+    "RAM": 3, "MEMORIA": 3,
+    "GPU": 4, "TARJETA DE VIDEO": 4, "VIDEO": 4,
+    "ALMACENAMIENTO": 5, "SSD": 5, "DISCO": 5, "M.2": 5,
+    "FUENTE": 6, "PSU": 6, "FUENTE DE PODER": 6,
+    "CASE": 7, "GABINETE": 7, "CHASIS": 7,
+    "REFRIGERACIÓN": 8, "COOLER": 8,
+    "MONITOR": 9,
+    "OTROS": 10
+}
 
 # --- LISTA DE AVATARES RANDOM PARA USUARIO ---
 USER_AVATARS = [
@@ -129,43 +144,81 @@ def ensure_catalog_exists():
 
 ensure_catalog_exists()
 
-# --- FUNCIONES DE PARSEO Y AUDITORÍA ---
+# --- FUNCIONES DE PARSEO Y ORDENAMIENTO (PYTHON AL MANDO) ---
 def extract_json_from_text(text):
     """Extrae el bloque JSON crudo del texto."""
-    json_match = re.search(r'```json\s*(\{.*?\})\s*```', text, re.DOTALL)
-    if not json_match:
-        json_match = re.search(r'^\s*(\{.*\})\s*$', text, re.DOTALL)
-    if json_match:
-        try:
+    try:
+        json_match = re.search(r'```json\s*(.*?)\s*```', text, re.DOTALL)
+        if json_match:
             return json.loads(json_match.group(1))
-        except:
-            return None
+        
+        start_idx = text.find('{')
+        end_idx = text.rfind('}')
+        if start_idx != -1 and end_idx != -1:
+            json_str = text[start_idx : end_idx + 1]
+            return json.loads(json_str)
+    except:
+        return None
     return None
 
+def get_sort_priority(component):
+    """Devuelve un número de prioridad basado en la categoría para ordenar."""
+    cat = component.get('category', '').upper().strip()
+    return COMPONENT_PRIORITY.get(cat, 99) # 99 para lo que no esté en la lista
+
 def parse_and_render_response(text):
-    """Renderiza la respuesta JSON a Markdown bonito."""
+    """
+    1. Extrae JSON.
+    2. ORDENA los componentes (CPU -> Placa -> RAM...).
+    3. Renderiza Markdown.
+    """
     data = extract_json_from_text(text)
-    if data and data.get("is_quote"):
+    
+    if data and isinstance(data, dict) and data.get("is_quote"):
         try:
             output = f"{data.get('intro', '')}\n\n"
-            for opt in data.get('options', []):
+            
+            options = data.get('options', [])
+            if not options: return text
+                
+            for opt in options:
                 total_real = 0.0
-                output += f"### {opt['title']}\n"
-                output += f"> *{opt['strategy']}*\n\n"
-                for item in opt['components']:
+                output += f"### {opt.get('title', 'Opción')}\n"
+                output += f"> *{opt.get('strategy', '')}*\n\n"
+                
+                components = opt.get('components', [])
+                
+                # --- AQUÍ ESTÁ LA MEJORA V20: ORDENAMIENTO FORZADO ---
+                # Python toma la lista desordenada y la ordena por jerarquía de hardware
+                components_sorted = sorted(components, key=get_sort_priority)
+                
+                if not components_sorted:
+                    output += "*(Sin componentes listados)*\n"
+                
+                for item in components_sorted:
                     try:
-                        price = float(item['price'])
+                        price = float(item.get('price', 0))
                         total_real += price
+                        
                         icon = "💡" if item.get('highlight') else "🔹"
-                        highlight_text = f" - *{item['highlight']}*" if item.get('highlight') else ""
-                        output += f"{icon} **{item['category']}**: [{item['name']}]({item['url']}) ... S/ {price:.2f}{highlight_text}\n"
+                        highlight_text = f" - *{item.get('highlight')}*" if item.get('highlight') else ""
+                        url = item.get('url', '#')
+                        name = item.get('name', 'Producto')
+                        cat = item.get('category', 'Componente').upper() # Forzamos mayúsculas para que se vea uniforme
+                        
+                        output += f"{icon} **{cat}**: [{name}]({url}) ... S/ {price:.2f}{highlight_text}\n"
                     except: continue
+                        
                 output += f"\n**💰 TOTAL EXACTO: S/ {total_real:,.2f}**\n"
                 output += "---" + "\n\n"
+            
             output += f"{data.get('outro', '')}\n\n"
             output += f"⚠ **ATENCIÓN:** Si decides comprar tu **PC COMPLETA** con nosotros, haz clic aquí para un **[DESCUENTO ADICIONAL EXCLUSIVO EN WHATSAPP]({WHATSAPP_LINK})**."
             return output
-        except: return text
+        except Exception as e:
+            print(f"Error renderizando: {e}")
+            return text 
+            
     return text
 
 # --- LÓGICA DE CLIENTE Y CACHE ---
@@ -185,40 +238,49 @@ MODEL_ID = 'models/gemini-2.0-flash'
 
 @st.cache_resource
 def setup_kiwi_brain():
-    """Inicializa con SISTEMA DE AUDITORÍA (V18)"""
+    """Inicializa con SISTEMA DE AUDITORÍA + ORDENAMIENTO (V21 - 3 OPCIONES)"""
     try:
         path = 'catalogo_kiwigeek.json'
         if not os.path.exists(path): return None, "Error: Archivo no encontrado."
         with open(path, 'r', encoding='utf-8') as f: catalog_data = f.read()
 
         system_instruction = (
-            "ROL: Kiwigeek AI, Ingeniero experto. Responde SOLO en JSON para cotizaciones.\n"
+            "ROL: Kiwigeek AI. Responde SOLO en JSON para cotizaciones. NO te preocupes por el orden visual, solo dame los datos.\n"
             "CONTEXTO: Inventario con LINKS. Úsalos.\n\n"
             "--- JSON ESTRICTO ---\n"
-            "Cuando te pidan PC, responde:\n"
+            "Estructura OBLIGATORIA para cotizaciones (DEBES GENERAR 3 OPCIONES: A, B y C):\n"
             "```json\n"
             "{\n"
             '  "is_quote": true,\n'
-            '  "detected_budget": 0,  // PON AQUÍ EL PRESUPUESTO QUE DETECTASTE (Número)\n'
-            '  "intro": "...",\n'
+            '  "detected_budget": 0,\n'
+            '  "intro": "Texto breve...",\n'
             '  "options": [\n'
             '    {\n'
-            '      "title": "Opción A", "strategy": "...",\n'
+            '      "title": "Opción A - Económica", "strategy": "...",\n'
             '      "components": [{"category": "CPU", "name": "...", "price": 0, "url": "..."}]\n'
+            '    },\n'
+            '    {\n'
+            '      "title": "Opción B - Balanceada", "strategy": "...", "components": [...] \n'
+            '    },\n'
+            '    {\n'
+            '      "title": "Opción C - Potencia", "strategy": "...", "components": [...] \n'
             '    }\n'
             '  ],\n'
             '  "outro": "..."\n'
             "}\n"
             "```\n"
-            "REGLA DE ORO: Si el usuario dice 'S/ 3000', tus opciones deben sumar cerca de 3000. "
-            "Máximo +15% de margen. Si te pasas, serás auditado y rechazado.\n"
+            "REGLAS:\n"
+            "1. NO sumes el total, solo precios unitarios.\n"
+            "2. El margen de error del presupuesto es MÁXIMO 15%. Ajústate.\n"
+            "3. En 'category' usa nombres simples: 'CPU', 'RAM', 'GPU'.\n"
+            "4. GENERA SIEMPRE 3 OPCIONES (A, B y C) para que el cliente compare.\n"
         )
 
         try:
             cache = client.caches.create(
                 model=MODEL_ID,
                 config=types.CreateCachedContentConfig(
-                    display_name='kiwigeek_v18_auditor',
+                    display_name='kiwigeek_v21_force_3_options',
                     system_instruction=system_instruction,
                     contents=[catalog_data],
                     ttl='7200s',
@@ -297,59 +359,46 @@ if prompt := st.chat_input("Ej: Tengo S/ 4000 para una PC de Streaming..."):
                 response = st.session_state.chat_session.send_message(prompt)
                 raw_text = response.text
                 
-                # 2. BUCLE DE AUDITORÍA Y CORRECCIÓN (MÁXIMO 2 INTENTOS)
+                # 2. AUDITORÍA (Mantiene la lógica V19, solo cambia el render final)
                 max_retries = 2
                 attempt = 0
-                
                 while attempt < max_retries:
                     data = extract_json_from_text(raw_text)
-                    
-                    # Si no es JSON de cotización, salimos del bucle (es charla normal)
-                    if not data or not data.get("is_quote") or not data.get("detected_budget"):
-                        break
-                        
+                    if not data or not isinstance(data, dict):
+                        if "Opción" in raw_text and "S/" in raw_text:
+                            attempt += 1
+                            error_msg = "ERROR FORMATO: Envía JSON puro. No texto plano."
+                            response = st.session_state.chat_session.send_message(error_msg)
+                            raw_text = response.text
+                            continue
+                        else: break
+                    if not data.get("is_quote"): break
                     budget = float(data.get("detected_budget", 0))
-                    if budget == 0: break # Si no detectó presupuesto, no podemos auditar
-
+                    if budget == 0: break 
                     feedback = []
                     needs_fix = False
-                    
-                    # Auditar cada opción
                     for opt in data.get('options', []):
-                        total_real = sum(float(c['price']) for c in opt['components'] if str(c['price']).replace('.', '', 1).isdigit())
-                        
-                        # REGLA MAESTRA: 15% MARGEN MÁXIMO
+                        total_real = sum(float(c.get('price', 0)) for c in opt.get('components', []))
                         limit = budget * 1.15 
-                        
                         if total_real > limit:
                             needs_fix = True
                             diff = total_real - budget
-                            feedback.append(f"• Opción '{opt['title']}' suma S/ {total_real:.2f} (Excede tu límite de S/ {limit:.2f} por S/ {diff:.2f}).")
-
+                            feedback.append(f"• '{opt.get('title')}' suma S/ {total_real:.2f} (Pasado por S/ {diff:.2f}).")
                     if needs_fix:
                         attempt += 1
-                        error_msg = (
-                            f"AUDITORÍA DE PRECIOS FALLIDA: El presupuesto del cliente es S/ {budget}. "
-                            f"Tus cotizaciones exceden el margen permitido del 15%:\n" + "\n".join(feedback) + 
-                            "\n\nACCIÓN REQUERIDA: Recalcula INMEDIATAMENTE. Reduce GPU, baja a i3/Ryzen 5 si es necesario, "
-                            "o quita componentes secundarios. ¡El total real calculado por Python no miente! Envía JSON corregido."
-                        )
-                        # Feedback invisible al usuario, solo interno para la IA
-                        print(f"🔄 CORRIGIENDO (Intento {attempt}): {error_msg}")
+                        error_msg = f"AUDITORÍA: Presupuesto S/ {budget}. Te pasaste:\n" + "\n".join(feedback)
                         response = st.session_state.chat_session.send_message(error_msg)
                         raw_text = response.text
-                    else:
-                        break # Auditoría aprobada
+                    else: break
 
-                # 3. MOSTRAR RESULTADO FINAL (Aprobado o el mejor esfuerzo tras reintentos)
+                # 3. MOSTRAR RESULTADO ORDENADO POR PYTHON
                 final_display = parse_and_render_response(raw_text)
                 placeholder.markdown(final_display)
                 st.session_state.messages.append({"role": "assistant", "content": raw_text})
 
             except Exception as e:
-                # Recovey básico si todo falla
                 st.error("Reiniciando conexión...")
-                del st.session_state["chat_session"]
+                if "chat_session" in st.session_state: del st.session_state["chat_session"]
                 st.rerun()
 
 st.markdown("<br><hr><p style='text-align: center; color: #555;'>© 2025 Kiwigeek Perú - Hardware for Professionals</p>", unsafe_allow_html=True)
