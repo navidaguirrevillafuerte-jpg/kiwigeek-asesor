@@ -165,15 +165,28 @@ if not os.path.exists('catalogo_kiwigeek.json'):
 # --- MOTORES DE LÓGICA ---
 
 def extract_json_from_text(text):
-    """Extrae JSON limpio."""
+    """Extrae JSON limpio y repara errores comunes de IA (CIRUJANO DE CÓDIGO)."""
     try:
+        # 1. Buscar bloque de código ```json ... ```
         json_match = re.search(r'```json\s*(.*?)\s*```', text, re.DOTALL)
-        if json_match: return json.loads(json_match.group(1))
+        content = json_match.group(1) if json_match else text
         
-        start = text.find('{')
-        end = text.rfind('}')
-        if start != -1 and end != -1: return json.loads(text[start:end+1])
-    except: pass
+        # 2. Limpieza agresiva: Encontrar primer { y último }
+        start = content.find('{')
+        end = content.rfind('}')
+        if start != -1 and end != -1:
+            json_str = content[start:end+1]
+            
+            # --- CIRUGÍA PLÁSTICA DE DATOS ---
+            # 1. Eliminar comentarios de estilo JS que la IA a veces pone (// ...)
+            json_str = re.sub(r'//.*', '', json_str)
+            # 2. Eliminar comas traicioneras al final de listas u objetos (error común: {a:1,})
+            json_str = re.sub(r',\s*}', '}', json_str)
+            json_str = re.sub(r',\s*]', ']', json_str)
+            
+            return json.loads(json_str)
+    except:
+        pass
     return None
 
 def get_sort_priority(component):
@@ -233,7 +246,13 @@ def render_vertical_option(option):
 def process_response(text, filtered_count=0):
     """Renderiza la respuesta final."""
     data = extract_json_from_text(text)
-    if not data or not isinstance(data, dict): return text
+    
+    # Si no es JSON válido (o es texto plano), lo mostramos limpio sin el disfraz de código
+    if not data or not isinstance(data, dict): 
+        # Limpieza de emergencia: Si quedó como código, quítale el disfraz para que se lea bien
+        clean_text = text.replace("```json", "").replace("```", "")
+        return clean_text
+        
     if not data.get("is_quote"): return data.get("message", text)
     
     html = f"<div style='margin-bottom:20px; color:#ddd;'>{data.get('intro','')}</div>"
@@ -282,7 +301,7 @@ def setup_kiwi_brain():
         sys_prompt = (
             "ERES KIWIGEEK AI. TU OBJETIVO: GENERAR JSON PERFECTO PARA COTIZAR PC.\n"
             "INPUT: Usuario pide PC y da presupuesto.\n"
-            "OUTPUT: JSON estricto.\n\n"
+            "OUTPUT: JSON estricto sin comentarios //.\n\n"
             "--- FASE 1: VALIDACIÓN ---\n"
             "Si el usuario NO dice si quiere 'Solo Torre' o 'PC Completa', devuelve:\n"
             "{ \"is_quote\": false, \"message\": \"👋 Hola, para ajustarme a tu presupuesto, ¿necesitas solo la torre (CPU) o la PC completa con monitor?\" }\n\n"
@@ -314,7 +333,7 @@ def setup_kiwi_brain():
         return client.caches.create(
             model=MODEL_ID,
             config=types.CreateCachedContentConfig(
-                display_name='kiwigeek_v25_vertical_filter',
+                display_name='kiwigeek_v27_final_repair',
                 system_instruction=sys_prompt,
                 contents=[catalog],
                 ttl='7200s'
@@ -352,7 +371,7 @@ st.markdown("""
     <div style="text-align:center; padding-bottom: 20px;">
         <img src="https://kiwigeekperu.com/wp-content/uploads/2025/06/Diseno-sin-titulo-24.png" height="80">
         <h1 class='neon-title'>AI</h1>
-        <p style='color:#666;'>Ingeniería de Hardware v25.0</p>
+        <p style='color:#666;'>Ingeniería de Hardware v27.0</p>
     </div>
 """, unsafe_allow_html=True)
 
@@ -360,7 +379,7 @@ st.markdown("""
 for msg in st.session_state.messages:
     if msg["role"] == "assistant":
         with st.chat_message(msg["role"], avatar=AVATAR_URL):
-            # Recuperamos metadata si existe (para saber si hubo filtrados previos)
+            # Recuperamos metadata si existe
             filtered = msg.get("filtered_count", 0)
             st.markdown(process_response(msg["content"], filtered), unsafe_allow_html=True)
     else:
@@ -381,8 +400,7 @@ if prompt := st.chat_input("Ej: Tengo S/ 3800 para PC Completa..."):
                 response = st.session_state.chat_session.send_message(prompt)
                 raw = response.text
                 
-                # 2. FILTRO Y AUDITORÍA (PYTHON JUDGE)
-                # Intentamos hasta 2 veces si TODAS las opciones son malas
+                # 2. FILTRO Y AUDITORÍA
                 max_retries = 2
                 attempt = 0
                 final_json = None
@@ -391,9 +409,12 @@ if prompt := st.chat_input("Ej: Tengo S/ 3800 para PC Completa..."):
                 while attempt < max_retries:
                     data = extract_json_from_text(raw)
                     
-                    # Si no es cotización, pasar directo
-                    if not data or not data.get("is_quote"): 
-                        final_json = raw # Texto plano
+                    if not data or not isinstance(data, dict): 
+                        final_json = raw # Fallback a texto limpio
+                        break
+                    
+                    if not data.get("is_quote"):
+                        final_json = json.dumps(data)
                         break
                     
                     budget = float(data.get("detected_budget", 0))
@@ -401,43 +422,33 @@ if prompt := st.chat_input("Ej: Tengo S/ 3800 para PC Completa..."):
                         final_json = json.dumps(data)
                         break
                     
-                    # AUDITORÍA: Filtrar opciones malas
                     valid_options = []
                     filtered_in_this_run = 0
                     
                     for opt in data.get('options', []):
                         total = sum(float(c['price']) for c in opt['components'])
-                        # Margen de tolerancia: 10%
                         limit = budget * 1.10
-                        
                         if total <= limit:
                             valid_options.append(opt)
                         else:
                             filtered_in_this_run += 1
-                            print(f"Opción rechazada: S/ {total} (Límite S/ {limit})")
                     
-                    # DECISIÓN
                     if len(valid_options) > 0:
-                        # Tenemos opciones válidas!
-                        data['options'] = valid_options # Reemplazamos las opciones en el JSON
+                        data['options'] = valid_options
                         final_json = json.dumps(data)
                         filtered_count = filtered_in_this_run
-                        break # Salimos del loop y mostramos lo que hay
+                        break 
                     else:
-                        # TODAS las opciones eran malas. Pedimos regeneración.
                         attempt += 1
-                        msg = f"ERROR: All options exceeded budget of S/ {budget}. The cheapest was S/ {total}. REGENERATE CHEAPER options please."
+                        msg = f"ERROR: All options exceeded budget S/ {budget}. REGENERATE CHEAPER options."
                         raw = st.session_state.chat_session.send_message(msg).text
-                        # Loop continua...
                 
-                # Si falló todo y sigue sin JSON o sin opciones válidas, mostramos lo último que llegó
-                if final_json is None: final_json = raw
+                if final_json is None: final_json = raw.replace("```json", "").replace("```", "")
                 
                 # 3. Renderizar
                 final_html = process_response(final_json, filtered_count)
                 placeholder.markdown(final_html, unsafe_allow_html=True)
                 
-                # Guardar en historial con metadata
                 st.session_state.messages.append({
                     "role": "assistant", 
                     "content": final_json,
