@@ -36,7 +36,7 @@ USER_AVATARS = [
 def apply_custom_styles():
     st.markdown(f"""
         <style>
-        /* Force reload styles v3.1 - Menu Restored */
+        /* Force reload styles v3.2 - Clean Header */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
         
         * {{ font-family: 'Inter', sans-serif !important; }}
@@ -110,9 +110,12 @@ def apply_custom_styles():
         /* Solo ocultamos el Footer (Made with Streamlit), mostramos el resto */
         footer {{visibility: hidden;}}
         
-        /* El header y toolbar ahora son visibles para que puedas recargar la caché */
-        /* #MainMenu {{visibility: visible;}} */
-        /* header {{visibility: visible;}} */
+        /* Ocultar elementos feos del header: Flecha del sidebar y Botón Deploy */
+        [data-testid="stSidebarCollapsedControl"] {{display: none !important;}}
+        .stDeployButton {{display: none !important;}}
+        
+        /* Mantenemos visible el menú de opciones (tres puntos) para borrar caché */
+        [data-testid="stToolbar"] {{visibility: visible !important;}}
         </style>
     """, unsafe_allow_html=True)
 
