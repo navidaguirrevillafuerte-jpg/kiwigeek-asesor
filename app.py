@@ -36,7 +36,7 @@ USER_AVATARS = [
 def apply_custom_styles():
     st.markdown(f"""
         <style>
-        /* Force reload styles v3.3 - No Sidebar Arrow */
+        /* Force reload styles v4.0 - Centered Mobile Look */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
         
         * {{ font-family: 'Inter', sans-serif !important; }}
@@ -77,11 +77,11 @@ def apply_custom_styles():
             background: transparent !important;
         }}
 
-        /* Target específico al área de texto usando el ID de datos de Streamlit */
+        /* Target específico al área de texto */
         textarea[data-testid="stChatInputTextArea"] {{
-            background-color: #e8e8e8 !important; /* Gris claro (NO negro) */
+            background-color: #e8e8e8 !important; /* Gris claro */
             color: #333333 !important; /* Texto gris oscuro */
-            caret-color: #333333 !important; /* Cursor oscuro */
+            caret-color: #333333 !important;
             border: 2px solid #555 !important;
             border-radius: 15px !important;
         }}
@@ -99,20 +99,29 @@ def apply_custom_styles():
             box-shadow: 0 0 20px rgba(0, 255, 65, 0.25) !important;
         }}
         
-        /* Ajustar ancho del contenedor principal (Centrado estricto) */
+        /* --- AJUSTE CRÍTICO DE ANCHO Y CENTRADO --- */
+        
+        /* 1. Ancho del contenedor principal (Mensajes) */
         .block-container {{
-            max-width: 700px !important;
-            padding-left: 20px !important;
-            padding-right: 20px !important;
-            margin: auto !important;
+            max-width: 680px !important; /* Reducido para evitar el efecto "estirado" */
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+        }}
+
+        /* 2. Ancho de la barra de entrada de chat (Input) */
+        /* Esto asegura que la barra de escribir NO ocupe toda la pantalla, sino que coincida con el chat */
+        .stChatInput {{
+            max-width: 680px !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
         }}
 
         /* Solo ocultamos el Footer (Made with Streamlit), mostramos el resto */
         footer {{visibility: hidden;}}
         
         /* --- ELIMINACIÓN AGRESIVA DEL BOTÓN SIDEBAR --- */
-        
-        /* Selector estándar */
         [data-testid="stSidebarCollapsedControl"] {{
             display: none !important;
             visibility: hidden !important;
@@ -122,15 +131,12 @@ def apply_custom_styles():
             pointer-events: none !important;
             overflow: hidden !important;
         }}
-        
-        /* En caso de que Streamlit use un contenedor padre para el botón */
         section[data-testid="stSidebar"] > div > div:first-child button {{
             display: none !important;
         }}
-        
         .stDeployButton {{display: none !important;}}
         
-        /* Mantenemos visible el menú de opciones (tres puntos) para borrar caché */
+        /* Mantenemos visible el menú de opciones (tres puntos) */
         [data-testid="stToolbar"] {{visibility: visible !important;}}
         </style>
     """, unsafe_allow_html=True)
