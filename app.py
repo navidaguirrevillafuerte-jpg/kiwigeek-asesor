@@ -1,9 +1,6 @@
 import streamlit as st
 import os
-import json
-import random
 import re
-import ast 
 from google import genai
 from google.genai import types
 
@@ -16,142 +13,198 @@ st.set_page_config(
 )
 
 # --- CONSTANTES ---
-COLORS = {
-    "kiwi_green": "#00FF41",
-    "bg_card": "#1E1E1E",
-    "border": "#333"
-}
 AVATAR_URL = "https://kiwigeekperu.com/wp-content/uploads/2026/01/gatitow.webp"
 WHATSAPP_LINK = "https://api.whatsapp.com/send/?phone=51939081940&text=Hola%2C+me+gustar%C3%ADa+saber+m%C3%A1s+de+sus+productos&type=phone_number&app_absent=0"
 
-USER_AVATARS = ["🧑‍💻", "👨‍💻", "👩‍💻", "🦸", "🦹", "🧙", "🧚", "🧛", "🧜", "🧝"]
-
-# --- CSS LIMPIO Y ORDENADO (TABLAS HTML ROBUSTAS) ---
+# --- CSS MEJORADO (Estilo Moderno y Limpio) ---
 def apply_custom_styles():
-    st.markdown(f"""
+    st.markdown("""
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
-        * {{ font-family: 'Inter', sans-serif !important; }}
         
-        /* Título Neón */
-        .neon-title {{
-            color: {COLORS['kiwi_green']} !important;
-            text-shadow: 0 0 15px rgba(0,255,65,0.4);
+        * { 
+            font-family: 'Inter', sans-serif !important; 
+        }
+        
+        /* Título Principal */
+        .neon-title {
+            color: #00FF41 !important;
+            text-shadow: 0 0 20px rgba(0,255,65,0.5);
             text-align: center;
             font-weight: 900 !important;
-            font-size: 3rem !important;
+            font-size: 3.5rem !important;
             margin: 0;
-            line-height: 1;
-        }}
-
-        /* Tarjeta de Opción */
-        .quote-container {{
-            background-color: #222;
-            border: 1px solid #444;
-            border-radius: 8px;
-            margin-bottom: 25px;
-            overflow: hidden;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        }}
-        .quote-header {{
-            background-color: {COLORS['kiwi_green']};
+            letter-spacing: -1px;
+        }
+        
+        /* Tarjetas de Cotización */
+        .quote-card {
+            background: linear-gradient(135deg, #1a1a1a 0%, #252525 100%);
+            border: 2px solid #00FF41;
+            border-radius: 16px;
+            padding: 24px;
+            margin: 20px 0;
+            box-shadow: 0 8px 32px rgba(0,255,65,0.15);
+        }
+        
+        .quote-header {
+            background: #00FF41;
             color: #000;
             padding: 12px 20px;
+            border-radius: 8px;
             font-weight: 800;
-            font-size: 1.1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid #000;
-        }}
-        .quote-strategy {{
-            font-size: 0.85rem; 
-            color: #111; 
-            font-weight: 600;
+            font-size: 1.3rem;
+            margin-bottom: 16px;
+            text-align: center;
             text-transform: uppercase;
-            opacity: 0.8;
-        }}
+            letter-spacing: 1px;
+        }
         
-        /* TABLA HTML REAL (Alineación perfecta) */
-        .quote-table {{
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.95rem;
-        }}
-        .quote-table td {{
-            padding: 10px 15px;
-            border-bottom: 1px solid #333;
-            vertical-align: middle;
-            color: #ddd;
-        }}
-        .quote-table tr:last-child td {{ border-bottom: none; }}
+        .quote-strategy {
+            background: #2a2a2a;
+            color: #00FF41;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            border-left: 4px solid #00FF41;
+        }
         
-        /* Columnas específicas */
-        .col-cat {{
-            width: 25%;
-            color: #888 !important;
+        /* Items de Componentes */
+        .component-item {
+            background: #1e1e1e;
+            border-left: 3px solid #444;
+            padding: 12px 16px;
+            margin: 8px 0;
+            border-radius: 6px;
+            transition: all 0.3s;
+        }
+        
+        .component-item:hover {
+            border-left-color: #00FF41;
+            background: #252525;
+            transform: translateX(4px);
+        }
+        
+        .component-category {
+            color: #00FF41;
             font-size: 0.75rem;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }}
-        .col-prod {{
-            width: 55%;
-        }}
-        .col-prod a {{ 
-            color: #fff; 
-            text-decoration: none; 
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+        
+        .component-name {
+            color: #fff;
+            font-size: 1rem;
             font-weight: 500;
-            display: block;
-            line-height: 1.3;
-        }}
-        .col-prod a:hover {{ text-decoration: underline; color: {COLORS['kiwi_green']}; }}
+            margin-bottom: 4px;
+        }
         
-        .col-price {{
-            width: 20%;
-            text-align: right;
-            color: {COLORS['kiwi_green']} !important;
+        .component-name a {
+            color: #fff;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .component-name a:hover {
+            color: #00FF41;
+            text-decoration: underline;
+        }
+        
+        .component-price {
+            color: #00FF41;
+            font-size: 1.1rem;
             font-weight: 700;
-            white-space: nowrap;
-        }}
+        }
         
-        .quote-total {{
-            background-color: #151515;
-            padding: 15px 20px;
+        .insight-box {
+            background: rgba(0,255,65,0.1);
+            border-left: 4px solid #00FF41;
+            padding: 10px 14px;
+            margin: 8px 0 8px 20px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            color: #ccc;
+        }
+        
+        /* Total */
+        .quote-total {
+            background: #000;
+            border: 2px solid #00FF41;
+            border-radius: 10px;
+            padding: 16px;
+            margin-top: 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-top: 1px solid #444;
-        }}
-        .t-label {{ color: #aaa; font-weight:600; font-size: 0.9rem; text-transform: uppercase; }}
-        .t-num {{
-            color: {COLORS['kiwi_green']};
-            font-size: 1.4rem;
+        }
+        
+        .total-label {
+            color: #aaa;
+            font-size: 1rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .total-amount {
+            color: #00FF41;
+            font-size: 2rem;
             font-weight: 900;
-            text-shadow: 0 0 10px rgba(0,255,65,0.2);
-        }}
-
+            text-shadow: 0 0 15px rgba(0,255,65,0.4);
+        }
+        
         /* Botón WhatsApp */
-        .btn-whatsapp {{
+        .btn-whatsapp {
             display: block;
             width: 100%;
-            background-color: #25D366;
+            background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
             color: white !important;
             text-align: center;
-            padding: 12px;
-            border-radius: 8px;
-            font-weight: 700;
+            padding: 16px;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 1.1rem;
             text-decoration: none !important;
-            margin-top: 20px;
-            transition: background 0.3s;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-        }}
-        .btn-whatsapp:hover {{ background-color: #1ebc57; transform: translateY(-1px); }}
+            margin-top: 24px;
+            transition: all 0.3s;
+            box-shadow: 0 6px 20px rgba(37,211,102,0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .btn-whatsapp:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(37,211,102,0.5);
+        }
+        
+        /* Warning Box */
+        .warning-box {
+            background: #332200;
+            border: 2px solid #ffcc00;
+            color: #ffcc00;
+            padding: 16px;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            margin: 20px 0;
+        }
         
         /* Ajustes UI */
-        .stChatMessage {{ background: transparent !important; }}
-        [data-testid="stChatMessageAssistant"] {{ background: rgba(255,255,255,0.03) !important; border: 1px solid #333; }}
-        footer {{visibility: hidden;}}
+        .stChatMessage { 
+            background: transparent !important; 
+        }
+        
+        [data-testid="stChatMessageAssistant"] { 
+            background: rgba(255,255,255,0.02) !important; 
+            border: 1px solid #333; 
+            border-radius: 12px;
+        }
+        
+        footer {
+            visibility: hidden;
+        }
         </style>
     """, unsafe_allow_html=True)
 
@@ -159,122 +212,176 @@ apply_custom_styles()
 
 # --- DATOS DUMMY ---
 if not os.path.exists('catalogo_kiwigeek.json'):
-    with open('catalogo_kiwigeek.json', 'w') as f: json.dump({"products": []}, f)
+    with open('catalogo_kiwigeek.json', 'w') as f:
+        import json
+        json.dump({"products": []}, f)
 
-# --- MOTORES DE LÓGICA ---
-
-def extract_json_from_text(text):
-    """Extrae JSON limpio y repara errores comunes."""
-    text_clean = text
-    try:
-        match = re.search(r'\{.*\}', text, re.DOTALL)
-        if match: text_clean = match.group(0)
-        
-        # Limpieza: No romper URLs
-        text_clean = re.sub(r'(?<!:)\/\/.*?\n', '\n', text_clean)
-        text_clean = re.sub(r',\s*\}', '}', text_clean)
-        text_clean = re.sub(r',\s*\]', ']', text_clean)
-        text_clean = text_clean.replace("True", "true").replace("False", "false").replace("None", "null")
-        
-        return json.loads(text_clean)
-    except:
-        try:
-            # Fallback Python
-            text_python = text_clean.replace("true", "True").replace("false", "False").replace("null", "None")
-            return ast.literal_eval(text_python)
-        except:
-            pass
-    return None
-
-def render_vertical_option(option):
-    """Renderiza UNA opción usando una TABLA HTML REAL."""
-    title = option.get('title', 'Opción')
-    strategy = option.get('strategy', '')
-    components = option.get('components', []) 
+# --- FUNCIÓN PARA CONVERTIR MARKDOWN A HTML ---
+def markdown_to_html(text):
+    """Convierte el formato Markdown de la IA a HTML bonito"""
     
-    total = sum(float(c.get('price', 0)) for c in components)
+    # Detectar si es una respuesta simple (no cotización)
+    if not "===" in text:
+        return f"<div style='color:#ddd; line-height:1.6;'>{text}</div>"
     
-    rows_html = ""
-    for c in components:
-        cat_display = c.get('category', 'Componente').upper()
-        # Normalizar nombres cortos
-        if "PROCESADOR" in cat_display or "CPU" in cat_display: cat_display = "CPU"
-        elif "PLACA" in cat_display: cat_display = "PLACA"
-        elif "VIDEO" in cat_display or "GPU" in cat_display: cat_display = "GPU"
-        elif "RAM" in cat_display: cat_display = "RAM"
-        elif "FUENTE" in cat_display: cat_display = "FUENTE"
-        elif "ALMACENAMIENTO" in cat_display or "SSD" in cat_display: cat_display = "SSD"
+    html_parts = []
+    current_option = None
+    current_components = []
+    current_insights = []
+    
+    lines = text.split('\n')
+    i = 0
+    
+    while i < len(lines):
+        line = lines[i].strip()
         
-        name = c.get('name', 'Producto')
-        url = c.get('url', '#')
-        price = float(c.get('price', 0))
+        # Detectar inicio de opción
+        if line.startswith('===') and 'OPCIÓN' in line:
+            # Guardar opción anterior si existe
+            if current_option:
+                html_parts.append(render_option_card(
+                    current_option, 
+                    current_components, 
+                    current_insights
+                ))
+            
+            # Nueva opción
+            match = re.search(r'OPCIÓN ([ABC]) - (.+?) ===', line)
+            if match:
+                current_option = {
+                    'letter': match.group(1),
+                    'title': match.group(2).strip(),
+                    'strategy': '',
+                    'total': 0
+                }
+                current_components = []
+                current_insights = []
         
-        rows_html += f"""
-        <tr>
-            <td class="col-cat">{cat_display}</td>
-            <td class="col-prod"><a href="{url}" target="_blank">{name}</a></td>
-            <td class="col-price">S/ {price:,.0f}</td>
-        </tr>
+        # Estrategia
+        elif line.startswith('> ESTRATEGIA:'):
+            if current_option:
+                current_option['strategy'] = line.replace('> ESTRATEGIA:', '').strip()
+        
+        # Componente
+        elif line.startswith('*'):
+            component_data = parse_component_line(line)
+            if component_data:
+                current_components.append(component_data)
+        
+        # Insight (💡)
+        elif '💡' in line:
+            insight_text = line.replace('💡', '').strip()
+            if insight_text:
+                current_insights.append(insight_text)
+        
+        # Total
+        elif line.startswith('TOTAL:'):
+            if current_option:
+                match = re.search(r'S/\s*([\d,\.]+)', line)
+                if match:
+                    current_option['total'] = match.group(1)
+        
+        i += 1
+    
+    # Guardar última opción
+    if current_option:
+        html_parts.append(render_option_card(
+            current_option, 
+            current_components, 
+            current_insights
+        ))
+    
+    # Agregar botón WhatsApp
+    html_parts.append(f"""
+        <a href="{WHATSAPP_LINK}" target="_blank" class="btn-whatsapp">
+            🚀 Solicitar Descuento Exclusivo en WhatsApp
+        </a>
+    """)
+    
+    return ''.join(html_parts)
+
+def parse_component_line(line):
+    """Extrae información de una línea de componente"""
+    # Formato: * [CATEGORÍA]: [Nombre] ... S/ [Precio] -> [Ver Producto](URL)
+    
+    # Extraer categoría
+    cat_match = re.search(r'\*\s*\[([^\]]+)\]:', line)
+    if not cat_match:
+        return None
+    
+    category = cat_match.group(1).strip()
+    
+    # Extraer precio
+    price_match = re.search(r'S/\s*([\d,\.]+)', line)
+    price = price_match.group(1) if price_match else "0"
+    
+    # Extraer nombre y URL
+    link_match = re.search(r'\[Ver Producto\]\(([^\)]+)\)', line)
+    url = link_match.group(1) if link_match else "#"
+    
+    # Nombre del producto (entre categoría y precio)
+    name_part = line.split(']:', 1)[1] if ']:' in line else ""
+    name_part = name_part.split('...')[0].strip() if '...' in name_part else name_part
+    name_part = name_part.split('S/')[0].strip()
+    name = name_part[:100]  # Limitar longitud
+    
+    return {
+        'category': category,
+        'name': name,
+        'price': price,
+        'url': url
+    }
+
+def render_option_card(option, components, insights):
+    """Renderiza una tarjeta de opción completa"""
+    
+    components_html = ""
+    insight_index = 0
+    
+    for comp in components:
+        components_html += f"""
+        <div class="component-item">
+            <div class="component-category">{comp['category']}</div>
+            <div class="component-name">
+                <a href="{comp['url']}" target="_blank">{comp['name']}</a>
+            </div>
+            <div class="component-price">S/ {comp['price']}</div>
+        </div>
         """
         
+        # Agregar insight si corresponde a este componente
+        if insight_index < len(insights):
+            # Los insights suelen ir después de GPU, RAM, Fuente, etc.
+            if any(keyword in comp['category'].upper() for keyword in ['GPU', 'RAM', 'FUENTE', 'DDR5']):
+                components_html += f"""
+                <div class="insight-box">
+                    💡 {insights[insight_index]}
+                </div>
+                """
+                insight_index += 1
+    
     return f"""
-    <div class="quote-container">
+    <div class="quote-card">
         <div class="quote-header">
-            <span>{title}</span>
-            <span class="quote-strategy">{strategy}</span>
+            Opción {option['letter']}: {option['title']}
         </div>
-        <table class="quote-table">
-            {rows_html}
-        </table>
+        <div class="quote-strategy">
+            📋 Estrategia: {option['strategy']}
+        </div>
+        {components_html}
         <div class="quote-total">
-            <span class="t-label">Total Contado</span>
-            <span class="t-num">S/ {total:,.2f}</span>
+            <span class="total-label">Total Contado</span>
+            <span class="total-amount">S/ {option['total']}</span>
         </div>
     </div>
     """
 
-def process_response(text, filtered_count=0):
-    """Renderiza la respuesta final directamente en Streamlit."""
-    data = extract_json_from_text(text)
-    
-    if not data or not isinstance(data, dict): 
-        # Fallback: Si no es JSON válido, mostrar como texto normal
-        clean_text = text.replace("```json", "").replace("```", "").replace("```html", "")
-        st.markdown(clean_text)
-        return clean_text
-        
-    if not data.get("is_quote"): 
-        message = data.get("message", text)
-        st.markdown(message)
-        return message
-    
-    # Construir HTML
-    html = f"<div style='margin-bottom:20px; color:#ddd;'>{data.get('intro','')}</div>"
-    
-    for opt in data.get('options', []):
-        html += render_vertical_option(opt)
-    
-    if filtered_count > 0:
-        html += f"""
-        <div style="background:#332200; border:1px solid #664400; color:#ffcc00; padding:10px; border-radius:8px; font-size:0.9rem; margin-top:10px;">
-            ⚠️ <b>Nota:</b> Se ocultaron {filtered_count} opción(es) porque excedían tu presupuesto. 
-        </div>
-        """
-    
-    html += f"""
-    <div style='margin-top:20px; color:#ddd;'>{data.get('outro','')}</div>
-    <a href="{WHATSAPP_LINK}" target="_blank" class="btn-whatsapp">
-        🚀 SOLICITAR DESCUENTO EXCLUSIVO EN WHATSAPP
-    </a>
-    """
-    
-    st.markdown(html, unsafe_allow_html=True)
-    return html
-
 # --- CONFIGURACIÓN DE IA ---
 def get_api_key():
-    try: return st.secrets["GEMINI_API_KEY"]
-    except: return os.getenv("GEMINI_API_KEY", "")
+    try: 
+        return st.secrets["GEMINI_API_KEY"]
+    except: 
+        return os.getenv("GEMINI_API_KEY", "")
 
 api_key = get_api_key()
 if not api_key:
@@ -287,54 +394,54 @@ MODEL_ID = 'models/gemini-2.0-flash'
 
 @st.cache_resource
 def setup_kiwi_brain():
+    """Configura el cerebro de Kiwigeek con el prompt original (Markdown)"""
     try:
         with open('catalogo_kiwigeek.json', 'r', encoding='utf-8') as f: 
             catalog = f.read()
             
         sys_prompt = (
-            "ERES KIWIGEEK AI. TU OBJETIVO: GENERAR JSON PERFECTO Y ORDENADO.\n"
-            "INPUT: Usuario pide PC y da presupuesto.\n"
-            "OUTPUT: JSON estricto sin comentarios.\n\n"
-            "--- VALIDACIÓN ---\n"
-            "Si falta 'Solo Torre' o 'PC Completa', pregunta primero.\n"
-            "{ \"is_quote\": false, \"message\": \"...\" }\n\n"
-            "--- COTIZACIÓN ---\n"
-            "Genera 3 opciones (A, B, C).\n"
-            "JSON OBLIGATORIO:\n"
-            "```json\n"
-            "{\n"
-            "  \"is_quote\": true,\n"
-            "  \"detected_budget\": 0,\n"
-            "  \"intro\": \"Texto breve...\",\n"
-            "  \"options\": [\n"
-            "    {\n"
-            "      \"title\": \"Opción A\", \"strategy\": \"...\",\n"
-            "      \"components\": [\n"
-            "         {\"category\": \"PROCESADOR\", \"name\": \"...\", \"price\": 0, \"url\": \"...\"},\n"
-            "         {\"category\": \"PLACA\", \"name\": \"...\", \"price\": 0, \"url\": \"...\"}\n"
-            "      ]\n"
-            "    }\n"
-            "  ],\n"
-            "  \"outro\": \"...\"\n"
-            "}\n"
-            "```\n"
-            "REGLAS CRÍTICAS:\n"
-            "1. NO COMENTARIOS (//). JSON PURO.\n"
-            "2. ORDEN VISUAL ES TU RESPONSABILIDAD: Debes ordenar la lista 'components' así:\n"
-            "   1. PROCESADOR\n"
-            "   2. PLACA MADRE\n"
-            "   3. RAM\n"
-            "   4. GPU\n"
-            "   5. SSD\n"
-            "   6. FUENTE\n"
-            "   7. CASE\n"
-            "   8. (MONITOR/PERIFÉRICOS)\n"
+            "ROL: Eres 'Kiwigeek AI', Ingeniero y Vendedor Experto. Tu misión es EDUCAR y VENDER.\n"
+            "CONTEXTO: Tienes un inventario con LINKS. Úsalos siempre.\n\n"
+            
+            "--- PASO 0: FILTRO DE ALCANCE ---\n"
+            "1. Si el cliente no especifica 'Solo Torre' o 'PC Completa', PREGUNTA PRIMERO.\n"
+            "2. Si ya especificó, avanza.\n\n"
+            
+            "--- PASO 1: LÓGICA DE COMPONENTES ---\n"
+            "1. CASE: Manténlo económico (incluso en opciones caras) para priorizar rendimiento.\n"
+            "2. FUENTE: Si subes GPU, sube la Fuente (Watts/Certificación) obligatoriamente.\n\n"
+            
+            "--- PASO 2: ALGORITMOS DE COTIZACIÓN ---\n"
+            "1. OPCIÓN A (AHORRO): [P - 10%]. Recorta Case, Placa y lujos.\n"
+            "2. OPCIÓN B (IDEAL): [P Exacto]. Equilibrio.\n"
+            "3. OPCIÓN C (POTENCIA PURA): [P + 15%]. Invierte en GPU -> Fuente -> RAM -> CPU.\n\n"
+            
+            "--- PASO 3: ARGUMENTACIÓN DE VENTAS ---\n"
+            "En la OPCIÓN C (y B si aplica), usa el icono '💡' para explicar la mejora:\n"
+            "- GPU: '💡 Potencia Gráfica: Juega en Ultra con más FPS.'\n"
+            "- DDR5: '💡 Tecnología Next-Gen: Velocidad superior a prueba de futuro.'\n"
+            "- 32GB RAM: '💡 Multitarea: Olvídate de cerrar pestañas.'\n"
+            "- FUENTE: '💡 Seguridad: Protege tu inversión ante picos.'\n\n"
+            
+            "--- FORMATO VISUAL (LINKS LIMPIOS) ---\n"
+            "Usa este formato EXACTO. NO repitas la URL en el texto del link:\n\n"
+            "=== OPCIÓN [A/B/C] - [NOMBRE] ===\n"
+            "> ESTRATEGIA: [Resumen de 1 línea]\n"
+            "* [CATEGORÍA]: [Nombre Producto] ... S/ [Precio] -> [Ver Producto](URL_DEL_JSON)\n"
+            "  💡 [Insight si aplica]\n"
+            "... (Lista resto de componentes) ...\n"
+            "----------------------------------\n"
+            "TOTAL: S/ [SUMA EXACTA]\n\n"
+            
+            "--- CIERRE DE VENTA ---\n"
+            "Finaliza con:\n"
+            "'⚠ **ATENCIÓN:** Si decides comprar tu **PC COMPLETA** con nosotros, comunícate al WhatsApp para aplicarte un **DESCUENTO ADICIONAL EXCLUSIVO**.'\n"
         )
         
         return client.caches.create(
             model=MODEL_ID,
             config=types.CreateCachedContentConfig(
-                display_name='kiwigeek_v34_final_urls',
+                display_name='kiwigeek_markdown_style',
                 system_instruction=sys_prompt,
                 contents=[catalog],
                 ttl='7200s'
@@ -344,16 +451,26 @@ def setup_kiwi_brain():
         return None, str(e)
 
 # --- APP MAIN LOOP ---
-if "messages" not in st.session_state: st.session_state.messages = []
+if "messages" not in st.session_state: 
+    st.session_state.messages = []
+
 if "chat_session" not in st.session_state:
     cache_name, err = setup_kiwi_brain()
-    if err and "catalogo" not in err: st.error(err); st.stop()
+    if err and "catalogo" not in err: 
+        st.error(err)
+        st.stop()
     
-    config = types.GenerateContentConfig(temperature=0.1, top_p=0.8, max_output_tokens=8192)
-    if cache_name: config.cached_content = cache_name
+    config = types.GenerateContentConfig(
+        temperature=0.15, 
+        top_p=0.85, 
+        max_output_tokens=8192
+    )
+    if cache_name: 
+        config.cached_content = cache_name
     
     st.session_state.chat_session = client.chats.create(model=MODEL_ID, config=config)
     
+    # Mensaje de bienvenida
     if not st.session_state.messages:
         st.session_state.messages.append({
             "role": "assistant",
@@ -365,14 +482,15 @@ with st.sidebar:
     st.image('https://kiwigeekperu.com/wp-content/uploads/2025/06/Diseno-sin-titulo-24.png')
     if st.button("🗑️ Reiniciar Chat", use_container_width=True):
         st.session_state.messages = []
-        del st.session_state["chat_session"]
+        if "chat_session" in st.session_state:
+            del st.session_state["chat_session"]
         st.rerun()
 
 st.markdown("""
     <div style="text-align:center; padding-bottom: 20px;">
         <img src="https://kiwigeekperu.com/wp-content/uploads/2025/06/Diseno-sin-titulo-24.png" height="80">
         <h1 class='neon-title'>AI</h1>
-        <p style='color:#666;'>Ingeniería de Hardware v34.1</p>
+        <p style='color:#666; font-size:0.9rem;'>Ingeniería de Hardware - Estilo Markdown</p>
     </div>
 """, unsafe_allow_html=True)
 
@@ -380,94 +498,38 @@ st.markdown("""
 for msg in st.session_state.messages:
     if msg["role"] == "assistant":
         with st.chat_message(msg["role"], avatar=AVATAR_URL):
-            filtered = msg.get("filtered_count", 0)
-            content = msg["content"]
-            
-            # Verificar si ya es HTML procesado
-            if content.startswith("<div") or content.startswith("<table"):
-                st.markdown(content, unsafe_allow_html=True)
-            else:
-                process_response(content, filtered)
+            st.markdown(markdown_to_html(msg["content"]), unsafe_allow_html=True)
     else:
-        with st.chat_message("user", avatar=random.choice(USER_AVATARS)):
+        with st.chat_message("user", avatar="👤"):
             st.markdown(msg["content"])
 
+# Input del usuario
 if prompt := st.chat_input("Ej: Tengo S/ 3800 para PC Completa..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user", avatar=random.choice(USER_AVATARS)):
+    
+    with st.chat_message("user", avatar="👤"):
         st.markdown(prompt)
 
     with st.chat_message("assistant", avatar=AVATAR_URL):
-        placeholder = st.empty()
-        with st.spinner("🤖 Analizando y auditando opciones..."):
+        with st.spinner("🤖 Analizando catálogo y preparando opciones..."):
             try:
-                if "chat_session" not in st.session_state: raise Exception("Reload")
+                if "chat_session" not in st.session_state:
+                    st.error("Error: Sesión perdida. Por favor recarga la página.")
+                    st.stop()
+                
                 response = st.session_state.chat_session.send_message(prompt)
-                raw = response.text
-                
-                # FILTRO Y AUDITORÍA
-                max_retries = 3 
-                attempt = 0
-                final_json = None
-                filtered_count = 0
-                
-                while attempt < max_retries:
-                    data = extract_json_from_text(raw)
-                    
-                    if not data or not isinstance(data, dict): 
-                        attempt += 1
-                        msg = "ERROR: JSON INVALID. Return ONLY valid JSON. Check brackets and commas."
-                        raw = st.session_state.chat_session.send_message(msg).text
-                        continue 
-                    
-                    if not data.get("is_quote"):
-                        final_json = json.dumps(data)
-                        break
-                    
-                    budget = float(data.get("detected_budget", 0))
-                    if budget == 0:
-                        nums = re.findall(r'\d+', prompt.replace(',', ''))
-                        if nums: budget = float(max(nums, key=len))
-                    
-                    valid_options = []
-                    filtered_in_this_run = 0
-                    
-                    if budget > 0:
-                        for opt in data.get('options', []):
-                            total = sum(float(c.get('price', 0)) for c in opt.get('components', []))
-                            limit = budget * 1.15
-                            if total <= limit:
-                                valid_options.append(opt)
-                            else:
-                                filtered_in_this_run += 1
-                        
-                        if len(valid_options) > 0:
-                            data['options'] = valid_options
-                            final_json = json.dumps(data)
-                            filtered_count = filtered_in_this_run
-                            break 
-                        else:
-                            attempt += 1
-                            msg = f"ERROR: All options too expensive (Budget: {budget}). Regenerate CHEAPER options."
-                            raw = st.session_state.chat_session.send_message(msg).text
-                            continue
-                    else:
-                        final_json = json.dumps(data)
-                        break
-                
-                if final_json is None: final_json = raw.replace("```json", "").replace("```", "")
+                raw_text = response.text
                 
                 # Renderizar directamente
-                with placeholder.container():
-                    final_html = process_response(final_json, filtered_count)
+                st.markdown(markdown_to_html(raw_text), unsafe_allow_html=True)
                 
-                # Guardar el HTML ya procesado
+                # Guardar en historial
                 st.session_state.messages.append({
                     "role": "assistant", 
-                    "content": final_html if final_html else final_json,
-                    "filtered_count": filtered_count
+                    "content": raw_text
                 })
                 
             except Exception as e:
-                st.error(f"Error crítico: {str(e)}")
-                if "chat_session" in st.session_state: del st.session_state["chat_session"]
+                st.error(f"Error: {str(e)}")
+                if "chat_session" in st.session_state:
+                    del st.session_state["chat_session"]
