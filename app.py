@@ -10,14 +10,200 @@ st.set_page_config(
     layout="centered"
 )
 
+# --- CSS PERSONALIZADO CON COLORES DE MARCA ---
+st.markdown("""
+    <style>
+    /* Colores de marca Kiwigeek */
+    :root {
+        --kiwi-green: #00FF41;
+        --kiwi-blue: #0066FF;
+        --kiwi-black: #1a1a1a;
+        --kiwi-gray: #4a4a4a;
+        --kiwi-light-gray: #2d2d2d;
+    }
+    
+    /* Fondo principal */
+    .stApp {
+        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    }
+    
+    /* Título principal con efecto neón */
+    h1 {
+        color: #00FF41 !important;
+        text-shadow: 0 0 10px #00FF41, 0 0 20px #00FF41, 0 0 30px #00FF41;
+        font-weight: 900 !important;
+        text-align: center;
+        padding: 10px 0;
+        animation: pulse 2s ease-in-out infinite;
+        font-size: 2.8em !important;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.8; }
+    }
+    
+    /* Subtítulo */
+    h3 {
+        color: #0066FF !important;
+        text-align: center;
+        font-weight: 600 !important;
+    }
+    
+    /* Cajas de información */
+    .stInfo {
+        background: linear-gradient(135deg, #0066FF22 0%, #00FF4122 100%) !important;
+        border-left: 4px solid #00FF41 !important;
+        border-radius: 10px !important;
+        box-shadow: 0 4px 15px rgba(0, 255, 65, 0.2);
+    }
+    
+    /* Mensajes del chat */
+    .stChatMessage {
+        background: #2d2d2d !important;
+        border-radius: 15px !important;
+        border: 1px solid #4a4a4a !important;
+        margin: 10px 0 !important;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    }
+    
+    /* Mensajes del usuario */
+    .stChatMessage[data-testid="user-message"] {
+        background: linear-gradient(135deg, #0066FF33 0%, #0066FF22 100%) !important;
+        border-left: 4px solid #0066FF !important;
+    }
+    
+    /* Mensajes del asistente */
+    .stChatMessage[data-testid="assistant-message"] {
+        background: linear-gradient(135deg, #00FF4122 0%, #00FF4111 100%) !important;
+        border-left: 4px solid #00FF41 !important;
+    }
+    
+    /* Input del chat */
+    .stChatInput {
+        background: #2d2d2d !important;
+        border: 2px solid #00FF41 !important;
+        border-radius: 25px !important;
+        box-shadow: 0 0 15px rgba(0, 255, 65, 0.3);
+    }
+    
+    .stChatInput input {
+        color: #00FF41 !important;
+        font-weight: 500;
+    }
+    
+    .stChatInput input::placeholder {
+        color: #4a4a4a !important;
+    }
+    
+    /* Botones */
+    .stButton > button {
+        background: linear-gradient(135deg, #0066FF 0%, #00FF41 100%) !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 25px !important;
+        padding: 10px 30px !important;
+        font-weight: bold !important;
+        box-shadow: 0 4px 15px rgba(0, 255, 65, 0.4);
+        transition: all 0.3s ease;
+    }
+    
+    .stButton > button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 255, 65, 0.6);
+    }
+    
+    /* Spinner personalizado */
+    .stSpinner > div {
+        border-top-color: #00FF41 !important;
+        border-right-color: #0066FF !important;
+    }
+    
+    /* Enlaces */
+    a {
+        color: #0066FF !important;
+        text-decoration: none !important;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    a:hover {
+        color: #00FF41 !important;
+        text-shadow: 0 0 10px #00FF41;
+    }
+    
+    /* Texto general */
+    p, li, span {
+        color: #e0e0e0 !important;
+    }
+    
+    /* Scrollbar personalizado */
+    ::-webkit-scrollbar {
+        width: 10px;
+        background: #1a1a1a;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: linear-gradient(180deg, #00FF41 0%, #0066FF 100%);
+        border-radius: 10px;
+    }
+    
+    /* Error messages */
+    .stError {
+        background: #ff000022 !important;
+        border-left: 4px solid #ff0000 !important;
+        color: #ff6b6b !important;
+    }
+    
+    /* Markdown en mensajes */
+    .stMarkdown {
+        color: #e0e0e0 !important;
+    }
+    
+    /* Headers en respuestas */
+    h2, h4 {
+        color: #00FF41 !important;
+        font-weight: 700 !important;
+    }
+    
+    /* Code blocks */
+    code {
+        background: #1a1a1a !important;
+        color: #00FF41 !important;
+        padding: 2px 6px !important;
+        border-radius: 4px !important;
+        border: 1px solid #00FF4133 !important;
+    }
+    
+    /* Divider */
+    hr {
+        border-color: #00FF41 !important;
+        opacity: 0.3;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+# --- HEADER CON LOGO ---
+st.markdown("<div style='text-align: center; padding: 20px 0 10px 0;'>", unsafe_allow_html=True)
+st.markdown("""
+    <img src='https://kiwigeekperu.com/wp-content/uploads/2025/06/Diseno-sin-titulo-24.png' 
+         alt='Kiwigeek Logo'
+         style='max-width: 320px; width: 100%; filter: drop-shadow(0 0 25px rgba(0, 255, 65, 0.4));'>
+""", unsafe_allow_html=True)
+st.markdown("</div>", unsafe_allow_html=True)
+
 # --- TÍTULO Y PRESENTACIÓN ---
-st.title("🥝 Kiwigeek AI")
-st.markdown("### Tu Ingeniero de Hardware Personal")
-st.info("💡 **Tip:** Dime tu presupuesto (ej: *'PC de 4000 soles'*) o pide componentes específicos.")
+st.markdown("""
+    <h1 style='margin-top: 0; padding-top: 0;'>
+        <img src='https://kiwigeekperu.com/wp-content/uploads/2026/01/gatitow.webp' 
+             style='width: 50px; vertical-align: middle; margin-right: 10px;'>
+        Kiwigeek AI
+    </h1>
+""", unsafe_allow_html=True)
+st.markdown("### 🎯 Tu Ingeniero de Hardware Personal")
+st.info("💡 **Ejemplo:** *'Armame una PC tengo 4000 soles'* o *'Quiero una PC gamer para jugar Valorant'*")
 
 # --- GESTIÓN DE LA LLAVE DE SEGURIDAD ---
-# Intentamos tomar la llave de los "Secretos" de la nube. 
-# Si falla (estás en local), usa tu llave directa.
 try:
     API_KEY = st.secrets["GEMINI_API_KEY"]
 except:
@@ -26,7 +212,7 @@ except:
 client = genai.Client(api_key=API_KEY)
 MODELO_USADO = 'models/gemini-2.0-flash'
 
-# --- FUNCIÓN: CARGAR CEREBRO (Solo se ejecuta 1 vez) ---
+# --- FUNCIÓN: CARGAR CEREBRO ---
 @st.cache_resource
 def iniciar_cerebro_kiwigeek():
     try:
@@ -36,7 +222,6 @@ def iniciar_cerebro_kiwigeek():
         with open('catalogo_kiwigeek.json', 'r', encoding='utf-8') as f:
             datos = f.read()
 
-        # AQUÍ ESTÁ TU PROMPT MAESTRO V15 (COMPLETO)
         system_prompt = (
             "ROL: Eres 'Kiwigeek AI', Ingeniero y Vendedor Experto. Tu misión es EDUCAR y VENDER.\n"
             "CONTEXTO: Tienes un inventario con LINKS. Úsalos siempre.\n"
@@ -72,7 +257,7 @@ def iniciar_cerebro_kiwigeek():
                 display_name='kiwigeek_web_v15',
                 system_instruction=system_prompt,
                 contents=[datos],
-                ttl='7200s', # 2 horas de vida en caché
+                ttl='7200s',
             )
         )
         return cache.name
@@ -94,9 +279,17 @@ if "chat" not in st.session_state:
             )
         )
         st.session_state.messages = []
+        # Mensaje de bienvenida inicial
+        st.session_state.messages.append({
+            "role": "assistant", 
+            "content": "¡Hola, entusiasta Kiwigeek! 🐱✨\n\n**¡Hagamos realidad tu PC!** 💻 Cuéntame tu presupuesto o qué tipo de máquina necesitas, y armaremos la configuración perfecta para ti.\n\n*Ejemplo: 'Tengo 5000 soles para una PC gamer'*"
+        })
     else:
         st.error("❌ No se encontró el catálogo. Verifica que 'catalogo_kiwigeek.json' esté subido.")
         st.stop()
+
+# --- SEPARADOR VISUAL ---
+st.markdown("---")
 
 # --- MOSTRAR MENSAJES ANTERIORES ---
 for message in st.session_state.messages:
@@ -104,7 +297,7 @@ for message in st.session_state.messages:
         st.markdown(message["content"])
 
 # --- CAPTURAR NUEVO MENSAJE ---
-if prompt := st.chat_input("¿Qué PC estás buscando hoy?"):
+if prompt := st.chat_input("¿Qué PC estás buscando hoy? 💻"):
     # 1. Guardar y mostrar mensaje usuario
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
@@ -112,10 +305,21 @@ if prompt := st.chat_input("¿Qué PC estás buscando hoy?"):
 
     # 2. Generar respuesta IA
     with st.chat_message("assistant"):
-        with st.spinner("Kiwigeek está calculando la mejor configuración..."):
+        with st.spinner("🥝 Kiwigeek está calculando la mejor configuración..."):
             try:
                 response = st.session_state.chat.send_message(prompt)
                 st.markdown(response.text)
                 st.session_state.messages.append({"role": "assistant", "content": response.text})
             except Exception as e:
                 st.error(f"Ocurrió un error: {e}")
+
+# --- FOOTER ---
+st.markdown("---")
+st.markdown(
+    "<p style='text-align: center; color: #4a4a4a; font-size: 0.9em;'>"
+    "<img src='https://kiwigeekperu.com/wp-content/uploads/2026/01/gatitow.webp' style='width: 24px; vertical-align: middle; margin-right: 8px;'>"
+    "<strong style='color: #00FF41;'>Kiwigeek</strong> - Equipamos tu poder | "
+    "<span style='color: #0066FF;'>Hecho con 💚 en Perú</span>"
+    "</p>",
+    unsafe_allow_html=True
+)
