@@ -32,10 +32,11 @@ USER_AVATARS = [
     "😎", "🤓", "🤠", "🥳", "👽", "🤖", "👮", "🕵️", "💂", "👷"
 ]
 
-# --- CSS MEJORADO ---
+# --- CSS MEJORADO (VERSIÓN FORZADA) ---
 def apply_custom_styles():
     st.markdown(f"""
         <style>
+        /* Force reload styles v3.0 */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
         
         * {{ font-family: 'Inter', sans-serif !important; }}
@@ -68,44 +69,45 @@ def apply_custom_styles():
             border-left: 4px solid {COLORS['kiwi_blue']} !important;
         }}
 
-        /* --- ESTILOS DEL INPUT DE CHAT --- */
+        /* --- ESTILOS DEL INPUT DE CHAT (REFORZADO) --- */
+        
+        /* Contenedor flotante del input */
         .stChatInputContainer {{
-            padding-bottom: 170px !important; /* SUBIDO BASTANTE MÁS (Antes 130px) */
-            padding-top: 20px !important;
-            background-color: transparent !important;
+            padding-bottom: 170px !important; /* Espacio inferior forzado */
+            background: transparent !important;
         }}
 
-        /* Estilizar la caja de texto misma */
-        /* Usamos selectores más específicos para asegurar que el estilo se aplique */
-        .stChatInput textarea, div[data-testid="stChatInput"] textarea {{
-            background-color: #e8e8e8 !important; /* Gris claro (no blanco puro, no negro) */
+        /* Target específico al área de texto usando el ID de datos de Streamlit */
+        textarea[data-testid="stChatInputTextArea"] {{
+            background-color: #e8e8e8 !important; /* Gris claro (NO negro) */
+            color: #333333 !important; /* Texto gris oscuro */
+            caret-color: #333333 !important; /* Cursor oscuro */
             border: 2px solid #555 !important;
-            color: #333333 !important; /* Gris oscuro para las letras (NO negro puro) */
-            caret-color: #333333 !important;
             border-radius: 15px !important;
         }}
         
-        /* Color del placeholder (texto de ayuda) */
-        .stChatInput textarea::placeholder {{
+        /* Placeholder del input */
+        textarea[data-testid="stChatInputTextArea"]::placeholder {{
             color: #666666 !important;
+            opacity: 1 !important;
         }}
         
-        /* Efecto focus en el input */
-        .stChatInput textarea:focus {{
+        /* Efecto Focus */
+        textarea[data-testid="stChatInputTextArea"]:focus {{
             border: 2px solid {COLORS['kiwi_green']} !important;
-            box-shadow: 0 0 15px rgba(0, 255, 65, 0.2) !important;
             background-color: #ffffff !important;
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.25) !important;
         }}
         
-        /* Ajustar ancho del contenedor principal (Márgenes laterales MUCHO más amplios) */
+        /* Ajustar ancho del contenedor principal (Centrado estricto) */
         .block-container {{
-            max-width: 700px !important; /* Reducido a 700px para que se vea más compacto */
-            padding-left: 1rem !important;
-            padding-right: 1rem !important;
+            max-width: 700px !important;
+            padding-left: 20px !important;
+            padding-right: 20px !important;
             margin: auto !important;
         }}
 
-        /* Ocultar elementos de la interfaz por defecto (Hamburguesa, Header, Footer) */
+        /* Ocultar elementos de la interfaz por defecto */
         #MainMenu {{visibility: hidden;}}
         header {{visibility: hidden;}}
         footer {{visibility: hidden;}}
