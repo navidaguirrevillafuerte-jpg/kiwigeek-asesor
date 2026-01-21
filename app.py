@@ -37,16 +37,16 @@ st.markdown("""
     /* Contenedor principal más ancho */
     .main .block-container {
         max-width: 900px;
-        padding-top: 2rem;
+        padding-top: 1rem;
         padding-bottom: 2rem;
-        padding-left: 2rem;
-        padding-right: 2rem;
+        padding-left: 3rem;
+        padding-right: 3rem;
     }
     
     @media (max-width: 768px) {
         .main .block-container {
-            padding-left: 1rem;
-            padding-right: 1rem;
+            padding-left: 1.5rem;
+            padding-right: 1.5rem;
         }
     }
     
@@ -97,6 +97,12 @@ st.markdown("""
         margin: 12px 0 !important;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
         font-size: 0.95em !important;
+    }
+    
+    /* Avatar personalizado para el asistente */
+    .stChatMessage[data-testid="assistant-message"] img {
+        content: url('https://kiwigeekperu.com/wp-content/uploads/2026/01/gatitow.webp') !important;
+        border-radius: 8px !important;
     }
     
     /* Mensajes del usuario */
@@ -226,11 +232,11 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- HEADER CON LOGO ---
-st.markdown("<div style='text-align: center; padding: 40px 0 30px 0;'>", unsafe_allow_html=True)
+st.markdown("<div style='text-align: center; padding: 15px 0 20px 0;'>", unsafe_allow_html=True)
 st.markdown("""
     <img src='https://kiwigeekperu.com/wp-content/uploads/2025/06/Diseno-sin-titulo-24.png' 
          alt='Kiwigeek Logo'
-         style='max-width: 360px; width: 100%; filter: drop-shadow(0 0 30px rgba(0, 255, 65, 0.4));'>
+         style='max-width: 340px; width: 100%; filter: drop-shadow(0 0 30px rgba(0, 255, 65, 0.4));'>
 """, unsafe_allow_html=True)
 st.markdown("</div>", unsafe_allow_html=True)
 
@@ -243,9 +249,7 @@ st.markdown("""
     </h1>
 """, unsafe_allow_html=True)
 
-st.markdown("<div style='text-align: center; color: #6a6a6a; font-size: 1em; margin-bottom: 30px; font-weight: 500;'>Tu Ingeniero de Hardware Personal</div>", unsafe_allow_html=True)
-
-st.info("💡 **Ejemplo:** *'Armame una PC tengo 4000 soles'* o *'Quiero una PC gamer para Valorant'*")
+st.markdown("<div style='text-align: center; color: #6a6a6a; font-size: 1em; margin-bottom: 25px; font-weight: 500;'>Tu Ingeniero de Hardware Personal</div>", unsafe_allow_html=True)
 
 # --- GESTIÓN DE LA LLAVE DE SEGURIDAD ---
 try:
@@ -334,7 +338,7 @@ if "chat" not in st.session_state:
 
 # --- SEPARADOR VISUAL ---
 st.markdown("""
-    <div style='margin: 35px 0 25px 0;'>
+    <div style='margin: 25px 0 20px 0;'>
         <div style='height: 1px; background: linear-gradient(90deg, transparent, #00FF4144, transparent);'></div>
     </div>
 """, unsafe_allow_html=True)
