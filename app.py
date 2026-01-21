@@ -223,7 +223,6 @@ def setup_kiwi_brain():
             
         except Exception as e:
             # FALLBACK: Si falla, usamos el modo estándar
-            # Esto permitirá que la app funcione aunque sea en modo gratuito/sin caché
             fallback_instruction = f"{system_instruction}\n\nCATÁLOGO DE PRODUCTOS:\n{catalog_data}"
             return None, fallback_instruction 
 
@@ -261,7 +260,6 @@ if "chat_session" not in st.session_state:
             )
         else:
             # MODO 2: ESTÁNDAR (Gratis pero consume límites, o Pago por uso alto)
-            # Usamos este si el caché falla por permisos
             st.session_state.is_cached_active = False
             st.session_state.chat_session = client.chats.create(
                 model=MODEL_ID,
@@ -291,7 +289,7 @@ with st.sidebar:
     if st.session_state.is_cached_active:
         st.success("⚡ **Caché Activo**\n\nSistema optimizado para bajo costo.")
     else:
-        st.warning("⚠️ **Modo Estándar**\n\nEl caché falló (posiblemente cuenta gratuita). Funcionando en modo compatibilidad.")
+        st.warning("⚠️ **Modo Estándar**\n\nEl caché falló (o expiró). Funcionando en modo compatibilidad.")
 
     st.markdown("---")
     
@@ -334,15 +332,70 @@ if prompt := st.chat_input("Ej: Tengo S/ 4000 para una PC de Streaming..."):
     with st.chat_message("assistant", avatar=AVATAR_URL):
         placeholder = st.empty()
         with st.spinner("🔍 Analizando stock y compatibilidad..."):
+            
+            # --- SISTEMA DE AUTO-RECUPERACIÓN (AUTO-HEALING) ---
             try:
+                # Verificamos si existe la sesión, si no, lanzamos error para activar el recovery
                 if "chat_session" not in st.session_state:
-                     st.error("Sesión expirada. Por favor recarga la página.")
-                else:
+                    raise Exception("Sesión perdida por inactividad")
+                
+                # INTENTO 1: Envío normal
+                response = st.session_state.chat_session.send_message(prompt)
+                full_response = response.text
+
+            except Exception as e:
+                # Si falla (Socket cerrado, Caché expirado, Timeout), iniciamos recuperación
+                print(f"⚠️ Conexión perdida ({e}). Iniciando protocolo de reconexión...")
+                
+                try:
+                    # 1. Recuperamos configuración fresca
+                    cache_name, fallback_instruction = setup_kiwi_brain()
+                    
+                    # 2. Reconstruimos el objeto de Chat
+                    new_chat = None
+                    if cache_name:
+                        new_chat = client.chats.create(
+                            model=MODEL_ID,
+                            config=types.GenerateContentConfig(
+                                cached_content=cache_name,
+                                temperature=0.15, top_p=0.85, max_output_tokens=8192
+                            )
+                        )
+                    else:
+                        new_chat = client.chats.create(
+                            model=MODEL_ID,
+                            config=types.GenerateContentConfig(
+                                system_instruction=fallback_instruction,
+                                temperature=0.15, top_p=0.85, max_output_tokens=8192
+                            )
+                        )
+
+                    # 3. RESTAURACIÓN DE MEMORIA (CRÍTICO)
+                    # Convertimos el historial visual de Streamlit al formato de Gemini
+                    history_for_gemini = []
+                    for msg in st.session_state.messages[:-1]: # Excluimos el último (el prompt actual)
+                        if msg["role"] == "user":
+                            history_for_gemini.append(types.Content(role="user", parts=[types.Part(text=msg["content"])]))
+                        elif msg["role"] == "assistant":
+                            history_for_gemini.append(types.Content(role="model", parts=[types.Part(text=msg["content"])]))
+                    
+                    # Inyectamos la memoria en el nuevo chat
+                    new_chat.history = history_for_gemini
+                    
+                    # Guardamos el nuevo chat restaurado en la sesión
+                    st.session_state.chat_session = new_chat
+
+                    # 4. INTENTO 2: Reenviamos el mensaje
                     response = st.session_state.chat_session.send_message(prompt)
                     full_response = response.text
-                    placeholder.markdown(full_response)
-                    st.session_state.messages.append({"role": "assistant", "content": full_response})
-            except Exception as e:
-                st.error(f"Error en la respuesta: {e}")
+                    
+                except Exception as e2:
+                    # Si falla el intento de recuperación, ahí sí mostramos error
+                    st.error(f"Error de conexión persistente. Por favor actualiza la página. ({e2})")
+                    st.stop()
+            
+            # Mostrar respuesta exitosa
+            placeholder.markdown(full_response)
+            st.session_state.messages.append({"role": "assistant", "content": full_response})
 
 st.markdown("<br><hr><p style='text-align: center; color: #555;'>© 2025 Kiwigeek Perú - Hardware for Professionals</p>", unsafe_allow_html=True)
