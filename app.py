@@ -6,7 +6,6 @@ from google import genai
 from google.genai import types
 
 # --- CONFIGURACIÓN DE LA PÁGINA ---
-# Debe ser siempre el primer comando de Streamlit
 st.set_page_config(
     page_title="Kiwigeek AI - Hardware Engineer",
     page_icon="🥝",
@@ -37,12 +36,10 @@ USER_AVATARS = [
 def apply_custom_styles():
     st.markdown(f"""
         <style>
-        /* Force reload styles v5.0 - Ultimate Black Border Fix */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
         
         * {{ font-family: 'Inter', sans-serif !important; }}
         
-        /* Título Neón Animado */
         .neon-title {{
             color: {COLORS['kiwi_green']} !important;
             text-shadow: 0 0 10px {COLORS['kiwi_green']}55, 0 0 20px {COLORS['kiwi_green']}33;
@@ -52,7 +49,6 @@ def apply_custom_styles():
             margin-bottom: 0px;
         }}
 
-        /* Contenedores de Mensajes */
         .stChatMessage {{
             border-radius: 15px !important;
             border: 1px solid #333 !important;
@@ -70,51 +66,41 @@ def apply_custom_styles():
             border-left: 4px solid {COLORS['kiwi_blue']} !important;
         }}
 
-        /* --- ESTILOS DEL INPUT DE CHAT (REFORZADO V5) --- */
-        
-        /* Contenedor flotante del input */
         .stChatInputContainer {{
-            padding-bottom: 20px !important; /* Ajustado para que no quede tan alto si no es necesario */
+            padding-bottom: 20px !important;
             background: transparent !important;
         }}
 
-        /* ESTRATEGIA: Targetear el CONTENEDOR, no solo la caja de texto */
         div[data-testid="stChatInput"] {{
             border-radius: 15px !important;
-            background-color: #e8e8e8 !important; /* Gris por defecto */
-            border: 2px solid transparent !important; /* Sin borde por defecto */
+            background-color: #e8e8e8 !important;
+            border: 2px solid transparent !important;
             color: #333 !important;
             box-shadow: none !important;
         }}
 
-        /* AL HACER CLICK (FOCUS): Usamos focus-within en el padre */
         div[data-testid="stChatInput"]:focus-within {{
-            background-color: #ffffff !important; /* Fondo blanco al escribir */
-            border: 2px solid #000000 !important; /* BORDE NEGRO PURO */
+            background-color: #ffffff !important;
+            border: 2px solid #000000 !important;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
         }}
 
-        /* Limpiar estilos internos de Streamlit que causan el borde rojo */
         div[data-testid="stChatInput"] > div, div[data-baseweb="base-input"] {{
             border: none !important;
             background-color: transparent !important;
             box-shadow: none !important;
         }}
 
-        /* El área de texto en sí misma */
         textarea[data-testid="stChatInputTextArea"] {{
             background-color: transparent !important;
             color: #333333 !important;
-            caret-color: #000000 !important; /* Cursor negro */
+            caret-color: #000000 !important;
         }}
         
         textarea[data-testid="stChatInputTextArea"]::placeholder {{
             color: #666666 !important;
         }}
         
-        /* --- AJUSTE CRÍTICO DE ANCHO Y CENTRADO --- */
-        
-        /* 1. Ancho del contenedor principal (Mensajes) */
         .block-container {{
             max-width: 680px !important; 
             padding-left: 1rem !important;
@@ -123,26 +109,18 @@ def apply_custom_styles():
             margin-right: auto !important;
         }}
 
-        /* 2. Ancho de la barra de entrada de chat (Input) */
         .stChatInput {{
             max-width: 680px !important;
             margin-left: auto !important;
             margin-right: auto !important;
         }}
 
-        /* Solo ocultamos el Footer (Made with Streamlit), mostramos el resto */
         footer {{visibility: hidden;}}
         
-        /* --- ELIMINACIÓN AGRESIVA DEL BOTÓN SIDEBAR --- */
-        [data-testid="stSidebarCollapsedControl"] {{
-            display: none !important;
-        }}
-        section[data-testid="stSidebar"] > div > div:first-child button {{
-            display: none !important;
-        }}
+        [data-testid="stSidebarCollapsedControl"] {{display: none !important;}}
+        section[data-testid="stSidebar"] > div > div:first-child button {{display: none !important;}}
         .stDeployButton {{display: none !important;}}
         
-        /* Mantenemos visible el menú de opciones (tres puntos) */
         [data-testid="stToolbar"] {{visibility: visible !important;}}
         </style>
     """, unsafe_allow_html=True)
@@ -150,7 +128,6 @@ def apply_custom_styles():
 apply_custom_styles()
 
 # --- HELPER: CREAR ARCHIVO DUMMY SI NO EXISTE ---
-# Esto evita que el código falle si no tienes el JSON a mano
 def ensure_catalog_exists():
     path = 'catalogo_kiwigeek.json'
     if not os.path.exists(path):
@@ -164,26 +141,22 @@ def ensure_catalog_exists():
         with open(path, 'w', encoding='utf-8') as f:
             json.dump(dummy_data, f)
 
-# Aseguramos que el archivo exista antes de leerlo
 ensure_catalog_exists()
 
 # --- LÓGICA DE CLIENTE Y CACHE ---
 def get_api_key():
-    # Intenta obtener de secrets, luego variables de entorno, o string vacío
     try:
         return st.secrets["GEMINI_API_KEY"]
     except:
         return os.getenv("GEMINI_API_KEY", "")
 
-# Manejo robusto de la API Key
 api_key = get_api_key()
 if not api_key:
-    # Si no hay API key, pedimos una temporalmente en el sidebar para que no crashee
     with st.sidebar:
         st.warning("⚠️ API Key no encontrada")
         api_key = st.text_input("Ingresa tu Gemini API Key:", type="password")
         if not api_key:
-            st.info("Por favor configura tu API key en .streamlit/secrets.toml o ingrésala aquí.")
+            st.info("Por favor configura tu API key.")
             st.stop()
 
 client = genai.Client(api_key=api_key)
@@ -191,98 +164,108 @@ MODEL_ID = 'models/gemini-2.0-flash'
 
 @st.cache_resource
 def setup_kiwi_brain():
-    """Inicializa el contenido cacheado para ahorrar tokens."""
-    # Retorna: (cache_name, fallback_system_instruction)
+    """Inicializa el contenido cacheado con la Lógica V15 Mejorada"""
     try:
         path = 'catalogo_kiwigeek.json'
-        # Verificación redundante, pero segura
         if not os.path.exists(path):
             return None, "Error: Archivo de catálogo no encontrado."
 
         with open(path, 'r', encoding='utf-8') as f:
             catalog_data = f.read()
 
+        # --- LÓGICA V15: CEREBRO AVANZADO DE VENTAS ---
         system_instruction = (
-            "ROL: Eres 'Kiwigeek AI', Ingeniero de Hardware y experto en optimización de presupuestos.\n"
-            "OBJETIVO: Ayudar al usuario a configurar su PC ideal usando estrictamente el catálogo adjunto.\n\n"
-            "REGLAS CRÍTICAS:\n"
-            "1. FORMATO: Usa tablas o listas con negritas para precios.\n"
-            "2. LINKS: Cada producto debe incluir su URL de compra directa.\n"
-            "3. ESTRATEGIA: Presenta siempre 3 opciones (Económica, Equilibrada, Máximo Rendimiento).\n"
-            "4. UPSELLING: Si el presupuesto lo permite, justifica por qué subir a una mejor GPU o Fuente de poder.\n"
-            "5. CIERRE: Recuerda el descuento exclusivo por PC completa al final."
+            "ROL: Eres 'Kiwigeek AI', Ingeniero y Vendedor Experto. Tu misión es EDUCAR y VENDER.\n"
+            "CONTEXTO: Tienes un inventario con LINKS. Úsalos siempre.\n\n"
+            "--- PASO 0: FILTRO DE ALCANCE ---\n"
+            "1. Si el cliente no especifica 'Solo Torre' o 'PC Completa', PREGUNTA PRIMERO.\n"
+            "2. Si ya especificó, avanza.\n\n"
+            "--- PASO 1: LÓGICA DE COMPONENTES ---\n"
+            "1. CASE: Manténlo económico (incluso en opciones caras) para priorizar rendimiento.\n"
+            "2. FUENTE: Si subes GPU, sube la Fuente (Watts/Certificación) obligatoriamente.\n\n"
+            "--- PASO 2: ALGORITMOS DE COTIZACIÓN ---\n"
+            "1. OPCIÓN A (AHORRO): [P - 10%]. Recorta Case, Placa y lujos.\n"
+            "2. OPCIÓN B (IDEAL): [P Exacto]. Equilibrio.\n"
+            "3. OPCIÓN C (POTENCIA PURA): [P + 15%]. Invierte en GPU -> Fuente -> RAM -> CPU.\n\n"
+            "--- PASO 3: ARGUMENTACIÓN DE VENTAS ---\n"
+            "En la OPCIÓN C (y B si aplica), usa el icono '💡' para explicar la mejora:\n"
+            "- GPU: '💡 Potencia Gráfica: Juega en Ultra con más FPS.'\n"
+            "- DDR5: '💡 Tecnología Next-Gen: Velocidad superior a prueba de futuro.'\n"
+            "- 32GB RAM: '💡 Multitarea: Olvídate de cerrar pestañas.'\n"
+            "- FUENTE: '💡 Seguridad: Protege tu inversión ante picos.'\n\n"
+            "--- FORMATO VISUAL (LINKS LIMPIOS) ---\n"
+            "Usa este formato EXACTO. NO repitas la URL en el texto del link:\n"
+            "\n"
+            "=== OPCIÓN [A/B/C] - [NOMBRE] ===\n"
+            "> ESTRATEGIA: [Resumen de 1 línea]\n"
+            "* [CATEGORÍA]: [Nombre Producto] ... S/ [Precio] -> [Ver Producto](URL_DEL_JSON)\n"
+            "  (Añade aquí la línea 💡 si corresponde)\n"
+            "... (Lista resto de componentes) ...\n"
+            "----------------------------------\n"
+            "TOTAL: S/ [SUMA EXACTA]\n"
+            "\n"
+            "--- CIERRE DE VENTA ---\n"
+            "Finaliza con:\n"
+            "'⚠ **ATENCIÓN:** Si decides comprar tu **PC COMPLETA** con nosotros, comunícate al WhatsApp para aplicarte un **DESCUENTO ADICIONAL EXCLUSIVO**.'"
         )
 
         try:
-            # Intentar crear cache con TTL de 2 horas
             cache = client.caches.create(
                 model=MODEL_ID,
                 config=types.CreateCachedContentConfig(
-                    display_name='kiwigeek_v1',
+                    display_name='kiwigeek_v15_linkfix',
                     system_instruction=system_instruction,
                     contents=[catalog_data],
                     ttl='7200s',
                 )
             )
-            # Si tiene éxito, devolvemos el nombre del cache y None como fallback
             return cache.name, None
             
         except Exception as e:
-            # Fallback silencioso si falla el caché (ej. API gratuita)
-            print(f"Advertencia: No se pudo crear el caché ({e}). Usando modo estándar.")
-            # Combinamos la instrucción y los datos para el modo estándar
+            print(f"Advertencia Caché: {e}. Usando modo estándar.")
             fallback_instruction = f"{system_instruction}\n\nCATÁLOGO DE PRODUCTOS:\n{catalog_data}"
             return None, fallback_instruction
 
     except Exception as e:
         return None, f"Error crítico: {str(e)}"
 
-# --- INICIALIZACIÓN DE SESIÓN (CORREGIDO) ---
+# --- INICIALIZACIÓN DE SESIÓN ---
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Esta lógica ahora se ejecutará correctamente al resetear la sesión
 if "chat_session" not in st.session_state:
-    # Obtenemos cache O instrucción fallback
     cache_name, fallback_instruction = setup_kiwi_brain()
     
-    # Verificamos si hubo un error crítico (si ambos son strings de error, aunque nuestra lógica devuelve (None, str))
-    # Si fallback_instruction empieza con "Error", es un error crítico de archivo
     if fallback_instruction and fallback_instruction.startswith("Error:"):
          st.error(f"⚠️ {fallback_instruction}")
          st.stop()
 
     try:
         if cache_name:
-            # Opción A: Usar Caché Optimizado
             st.session_state.chat_session = client.chats.create(
                 model=MODEL_ID,
                 config=types.GenerateContentConfig(
                     cached_content=cache_name,
-                    temperature=0.2,
-                    top_p=0.9
+                    temperature=0.15, # Ajustado a V15 (más preciso)
+                    top_p=0.85,       # Ajustado a V15
+                    max_output_tokens=8192 # Permitir respuestas largas
                 )
             )
-            # Indicador visual discreto de que el caché está activo
-            print("Sistema: Caché activo")
         else:
-            # Opción B: Modo Estándar (Fallback)
             st.session_state.chat_session = client.chats.create(
                 model=MODEL_ID,
                 config=types.GenerateContentConfig(
-                    system_instruction=fallback_instruction, # Pasamos todo el contexto aquí
-                    temperature=0.2,
-                    top_p=0.9
+                    system_instruction=fallback_instruction,
+                    temperature=0.15,
+                    top_p=0.85,
+                    max_output_tokens=8192
                 )
             )
-            # Indicador visual discreto
-            print("Sistema: Modo estándar (sin caché)")
             
     except Exception as e:
         st.error(f"Error al conectar con Gemini: {e}")
         st.stop()
 
-    # Mensaje de bienvenida - Se añade SOLO si la lista de mensajes está vacía
     if not st.session_state.messages:
         st.session_state.messages.append({
             "role": "assistant",
@@ -290,22 +273,16 @@ if "chat_session" not in st.session_state:
         })
 
 # --- INTERFAZ ---
-# Sidebar para acciones
 with st.sidebar:
     st.image('https://kiwigeekperu.com/wp-content/uploads/2025/06/Diseno-sin-titulo-24.png')
     st.markdown("---")
     
-    # --- CORRECCIÓN AQUÍ: BOTÓN DE LIMPIEZA ---
     if st.button("🗑️ Limpiar Conversación", use_container_width=True):
-        # 1. Borrar mensajes visuales
         st.session_state.messages = []
-        # 2. CRÍTICO: Borrar la sesión del chat para reiniciar la memoria de la IA
         if "chat_session" in st.session_state:
             del st.session_state["chat_session"]
-        # 3. Recargar la app para que se ejecute la inicialización de nuevo
         st.rerun()
 
-# Header Principal
 st.markdown("""
     <div style="display: flex; justify-content: center; align-items: center; gap: 10px; padding-bottom: 10px;">
         <img src="https://kiwigeekperu.com/wp-content/uploads/2025/06/Diseno-sin-titulo-24.png" 
@@ -315,23 +292,18 @@ st.markdown("""
 """, unsafe_allow_html=True)
 st.markdown("<p style='text-align: center; color: #888;'>Ingeniería de hardware de alto nivel</p>", unsafe_allow_html=True)
 
-# Mostrar historial
 for msg in st.session_state.messages:
     if msg["role"] == "assistant":
         with st.chat_message(msg["role"], avatar=AVATAR_URL):
             st.markdown(msg["content"])
     else:
-        # Usar el avatar guardado o uno aleatorio si es un mensaje antiguo
         user_avatar = msg.get("avatar", random.choice(USER_AVATARS))
         with st.chat_message(msg["role"], avatar=user_avatar):
             st.markdown(msg["content"])
 
-# Entrada de usuario
 if prompt := st.chat_input("Ej: Tengo S/ 4000 para una PC de Streaming..."):
-    # Seleccionar avatar aleatorio ÚNICO para este mensaje
     current_user_avatar = random.choice(USER_AVATARS)
     
-    # Añadir mensaje de usuario con su avatar específico
     st.session_state.messages.append({
         "role": "user", 
         "content": prompt, 
@@ -341,12 +313,10 @@ if prompt := st.chat_input("Ej: Tengo S/ 4000 para una PC de Streaming..."):
     with st.chat_message("user", avatar=current_user_avatar):
         st.markdown(prompt)
 
-    # Respuesta de la IA
     with st.chat_message("assistant", avatar=AVATAR_URL):
         placeholder = st.empty()
         with st.spinner("🔍 Analizando stock y compatibilidad..."):
             try:
-                # Asegurarse de que chat_session existe
                 if "chat_session" not in st.session_state:
                      st.error("Sesión expirada. Por favor recarga la página.")
                 else:
@@ -357,5 +327,4 @@ if prompt := st.chat_input("Ej: Tengo S/ 4000 para una PC de Streaming..."):
             except Exception as e:
                 st.error(f"Error en la respuesta: {e}")
 
-# Footer
 st.markdown("<br><hr><p style='text-align: center; color: #555;'>© 2025 Kiwigeek Perú - Hardware for Professionals</p>", unsafe_allow_html=True)
