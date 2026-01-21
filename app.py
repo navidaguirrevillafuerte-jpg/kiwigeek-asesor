@@ -10,296 +10,256 @@ from google.genai import types
 st.set_page_config(
     page_title="Kiwigeek AI - Hardware Engineer",
     page_icon="https://kiwigeekperu.com/wp-content/uploads/2025/06/Diseno-sin-titulo-24.png",
-    layout="wide",
+    layout="centered",
     initial_sidebar_state="collapsed"
 )
 
-# --- CONSTANTES DE MARCA ---
+# --- CONSTANTES ---
 COLORS = {
     "kiwi_green": "#00FF41",
-    "kiwi_blue": "#0066FF",
-    "bg_dark": "#1a1a1a",
-    "bg_card": "#2d2d2d",
-    "text_white": "#ffffff",
-    "border_gray": "#444"
+    "bg_card": "#1E1E1E",
+    "border": "#333"
 }
 AVATAR_URL = "https://kiwigeekperu.com/wp-content/uploads/2026/01/gatitow.webp"
 WHATSAPP_LINK = "https://api.whatsapp.com/send/?phone=51939081940&text=Hola%2C+me+gustar%C3%ADa+saber+m%C3%A1s+de+sus+productos&type=phone_number&app_absent=0"
 
-# --- ORDEN LÓGICO DE COMPONENTES (TABLA BOLETA) ---
+# --- ORDEN ESTRICTO POR FILAS (TU PEDIDO) ---
 COMPONENT_PRIORITY = {
     "PROCESADOR": 1, "CPU": 1,
-    "PLACA MADRE": 2, "MOTHERBOARD": 2, "PLACA": 2,
-    "MEMORIA RAM": 3, "RAM": 3, "MEMORIA": 3,
-    "TARJETA DE VIDEO": 4, "GPU": 4, "VIDEO": 4,
+    "PLACA": 2, "MOTHERBOARD": 2, "PLACA MADRE": 2, "MAINBOARD": 2,
+    "VIDEO": 3, "GPU": 3, "TARJETA DE VIDEO": 3, "GRÁFICA": 3,
+    "MEMORIA": 4, "RAM": 4, "MEMORIA RAM": 4,
     "ALMACENAMIENTO": 5, "SSD": 5, "DISCO": 5, "M.2": 5,
-    "FUENTE DE PODER": 6, "PSU": 6, "FUENTE": 6,
-    "CASE": 7, "GABINETE": 7, "CHASIS": 7,
-    "REFRIGERACIÓN": 8, "COOLER": 8, "LIQUIDA": 8,
-    "MONITOR": 9, "PANTALLA": 9,
-    "TECLADO": 10, "MOUSE": 11, "AUDIFONOS": 12,
-    "OTROS": 99
+    "FUENTE": 6, "PSU": 6, "FUENTE DE PODER": 6,
+    "CASE": 7, "GABINETE": 7, "CHASIS": 7, "TORRE": 7,
+    "MONITOR": 8, "PANTALLA": 8,
+    "TECLADO": 9,
+    "MOUSE": 10,
+    "AUDIFONOS": 11,
+    "REFRIGERACIÓN": 12, "COOLER": 12
 }
 
-# --- LISTA DE AVATARES RANDOM PARA USUARIO ---
-USER_AVATARS = [
-    "🧑‍💻", "👨‍💻", "👩‍💻", "🦸", "🦹", "🧙", "🧚", "🧛", "🧜", "🧝", 
-    "🧞", "🧟", "💆", "💇", "🚶", "🏃", "💃", "🕺", "🕴", "👯", 
-    "🧖", "🧗", "🤺", "🏇", "⛷", "🏂", "🏌️", "🏄", "🚣", "🏊", 
-    "⛹️", "🏋️", "🚴", "🚵", "🤸", "🤼", "🤽", "🤾", "🤹", "🧘", 
-    "🛀", "🛌", "🧑", "🧒", "👦", "👧", "🧑‍🦱", "👨‍🦱", "👩‍🦱", "🧑‍🦰",
-    "😎", "🤓", "🤠", "🥳", "👽", "🤖", "👮", "🕵️", "💂", "👷"
-]
+USER_AVATARS = ["🧑‍💻", "👨‍💻", "👩‍💻", "🦸", "🦹", "🧙", "🧚", "🧛", "🧜", "🧝"]
 
-# --- CSS MEJORADO (TABLAS HTML) ---
+# --- CSS LIMPIO Y ORDENADO ---
 def apply_custom_styles():
     st.markdown(f"""
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
         * {{ font-family: 'Inter', sans-serif !important; }}
         
+        /* Título Neón */
         .neon-title {{
             color: {COLORS['kiwi_green']} !important;
-            text-shadow: 0 0 10px {COLORS['kiwi_green']}55, 0 0 20px {COLORS['kiwi_green']}33;
+            text-shadow: 0 0 15px rgba(0,255,65,0.4);
             text-align: center;
-            font-weight: 800 !important;
-            font-size: 2.8rem !important;
-            margin-bottom: 0px;
+            font-weight: 900 !important;
+            font-size: 3rem !important;
+            margin: 0;
+            line-height: 1;
         }}
-        
-        /* Estilo BOLETA HTML */
-        .boleta-container {{
-            background-color: #262626;
-            border: 1px solid {COLORS['border_gray']};
-            border-radius: 10px;
-            overflow: hidden;
+
+        /* Tarjeta de Opción (Vertical y Limpia) */
+        .quote-container {{
+            background-color: #222;
+            border: 1px solid #444;
+            border-radius: 8px;
             margin-bottom: 25px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            overflow: hidden;
         }}
-        .boleta-header {{
+        .quote-header {{
             background-color: {COLORS['kiwi_green']};
             color: #000;
             padding: 10px 15px;
             font-weight: 800;
             font-size: 1.1rem;
-            border-bottom: 2px solid #000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }}
-        .boleta-table {{
+        .quote-strategy {{
+            font-size: 0.8rem; 
+            color: #222; 
+            font-weight: 500;
+        }}
+        
+        /* Tabla de Componentes */
+        .comp-table {{
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.95rem;
         }}
-        .boleta-table th {{
-            background-color: #333;
-            color: #ccc;
-            text-transform: uppercase;
-            font-size: 0.8rem;
-            padding: 8px 15px;
-            text-align: left;
-            border-bottom: 1px solid #444;
-        }}
-        .boleta-table td {{
-            padding: 10px 15px;
+        .comp-row {{
             border-bottom: 1px solid #333;
-            color: #fff;
-            vertical-align: middle;
+            display: flex;
+            padding: 8px 15px;
+            align-items: center;
         }}
-        .boleta-table tr:last-child td {{
-            border-bottom: none;
-        }}
-        .boleta-total {{
-            background-color: #1a1a1a;
-            color: {COLORS['kiwi_green']};
-            padding: 15px;
-            text-align: right;
-            font-size: 1.2rem;
-            font-weight: bold;
-            border-top: 1px solid #444;
-        }}
-        .component-cat {{
-            color: #aaa;
-            font-size: 0.8rem;
+        .comp-row:last-child {{ border-bottom: none; }}
+        
+        .c-label {{
+            width: 30%;
+            color: #888;
+            font-size: 0.85rem;
             font-weight: 600;
             text-transform: uppercase;
+        }}
+        .c-val {{
+            width: 50%;
+            color: #eee;
+            font-size: 0.95rem;
+        }}
+        .c-val a {{ color: #fff; text-decoration: none; font-weight:500; }}
+        .c-val a:hover {{ text-decoration: underline; color: {COLORS['kiwi_green']}; }}
+        
+        .c-price {{
+            width: 20%;
+            text-align: right;
+            color: {COLORS['kiwi_green']};
+            font-weight: 700;
+            font-size: 0.95rem;
+        }}
+        
+        .quote-total {{
+            background-color: #111;
+            padding: 12px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #444;
+        }}
+        .t-num {{
+            color: {COLORS['kiwi_green']};
+            font-size: 1.3rem;
+            font-weight: 900;
+        }}
+
+        /* Botón WhatsApp */
+        .btn-whatsapp {{
             display: block;
-            margin-bottom: 2px;
+            width: 100%;
+            background-color: #25D366;
+            color: white !important;
+            text-align: center;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 700;
+            text-decoration: none !important;
+            margin-top: 20px;
+            transition: background 0.3s;
         }}
+        .btn-whatsapp:hover {{ background-color: #1ebc57; }}
         
-        .stChatMessage {{
-            border-radius: 15px !important;
-            border: 1px solid #333 !important;
-            padding: 15px !important;
-            margin-bottom: 10px !important;
-        }}
-        [data-testid="stChatMessageAssistant"] {{
-            background: rgba(0, 255, 65, 0.05) !important;
-            border-left: 4px solid {COLORS['kiwi_green']} !important;
-        }}
-        [data-testid="stChatMessageUser"] {{
-            background: rgba(0, 102, 255, 0.05) !important;
-            border-left: 4px solid {COLORS['kiwi_blue']} !important;
-        }}
-        
-        /* Ocultar elementos de Streamlit */
+        /* Ajustes UI */
+        .stChatMessage {{ background: transparent !important; }}
+        [data-testid="stChatMessageAssistant"] {{ background: rgba(255,255,255,0.03) !important; border: 1px solid #333; }}
         footer {{visibility: hidden;}}
-        [data-testid="stSidebarCollapsedControl"] {{display: none !important;}}
-        .stDeployButton {{display: none !important;}}
         </style>
     """, unsafe_allow_html=True)
 
 apply_custom_styles()
 
-# --- HELPER: CREAR ARCHIVO DUMMY SI NO EXISTE ---
-def ensure_catalog_exists():
-    path = 'catalogo_kiwigeek.json'
-    if not os.path.exists(path):
-        dummy_data = {
-            "products": [
-                {"category": "GPU", "name": "NVIDIA RTX 4060", "price": 1200, "url": "https://kiwigeekperu.com"},
-                {"category": "CPU", "name": "Intel Core i5 13400F", "price": 800, "url": "https://kiwigeekperu.com"},
-                {"category": "RAM", "name": "16GB DDR4 3200MHz", "price": 200, "url": "https://kiwigeekperu.com"}
-            ]
-        }
-        with open(path, 'w', encoding='utf-8') as f:
-            json.dump(dummy_data, f)
+# --- DATOS DUMMY ---
+if not os.path.exists('catalogo_kiwigeek.json'):
+    with open('catalogo_kiwigeek.json', 'w') as f: json.dump({"products": []}, f)
 
-ensure_catalog_exists()
+# --- MOTORES DE LÓGICA ---
 
-# --- FUNCIONES DE PARSEO Y ORDENAMIENTO (PYTHON AL MANDO) ---
 def extract_json_from_text(text):
-    """Extrae el bloque JSON crudo del texto de forma robusta."""
+    """Extrae JSON limpio."""
     try:
-        # Intento 1: Bloque de código json
         json_match = re.search(r'```json\s*(.*?)\s*```', text, re.DOTALL)
-        if json_match:
-            return json.loads(json_match.group(1))
+        if json_match: return json.loads(json_match.group(1))
         
-        # Intento 2: Buscar llaves { } extremas
-        start_idx = text.find('{')
-        end_idx = text.rfind('}')
-        if start_idx != -1 and end_idx != -1:
-            json_str = text[start_idx : end_idx + 1]
-            return json.loads(json_str)
-    except:
-        return None
+        start = text.find('{')
+        end = text.rfind('}')
+        if start != -1 and end != -1: return json.loads(text[start:end+1])
+    except: pass
     return None
 
 def get_sort_priority(component):
-    """Devuelve un número de prioridad basado en la categoría para ordenar."""
-    cat = component.get('category', '').upper().strip()
-    # Búsqueda parcial para ser más flexible (ej: "MEMORIA RAM" coincide con "RAM")
+    """Ordena según tu lista (CPU -> Placa -> GPU...)."""
+    cat = component.get('category', '').upper()
     for key, priority in COMPONENT_PRIORITY.items():
-        if key in cat:
-            return priority
-    return 99 
+        if key in cat: return priority
+    return 99
 
-def generate_html_boleta(option_data):
-    """Genera una tabla HTML bonita tipo boleta."""
-    title = option_data.get('title', 'Opción')
-    strategy = option_data.get('strategy', '')
-    components = option_data.get('components', [])
+def render_vertical_option(option):
+    """Renderiza UNA opción en formato vertical limpio."""
+    title = option.get('title', 'Opción')
+    strategy = option.get('strategy', '')
+    components = sorted(option.get('components', []), key=get_sort_priority)
     
-    # Ordenar componentes
-    components_sorted = sorted(components, key=get_sort_priority)
+    total = sum(float(c.get('price', 0)) for c in components)
     
-    # Iniciar HTML
-    html = f"""
-    <div class="boleta-container">
-        <div class="boleta-header">{title}<br><span style="font-size:0.8rem; font-weight:400; color:#333;">{strategy}</span></div>
-        <table class="boleta-table">
-            <thead>
-                <tr>
-                    <th width="20%">Categoría</th>
-                    <th width="60%">Producto</th>
-                    <th width="20%" style="text-align:right;">Precio</th>
-                </tr>
-            </thead>
-            <tbody>
-    """
-    
-    total_real = 0.0
-    for item in components_sorted:
-        try:
-            price = float(item.get('price', 0))
-            total_real += price
-            name = item.get('name', 'Producto')
-            url = item.get('url', '#')
-            cat = item.get('category', 'Componente').upper()
-            highlight = item.get('highlight', '')
-            
-            highlight_html = f'<br><span style="color:#00FF41; font-size:0.8rem;">💡 {highlight}</span>' if highlight else ''
-            
-            html += f"""
-            <tr>
-                <td><span class="component-cat">{cat}</span></td>
-                <td><a href="{url}" target="_blank" style="color:#fff; text-decoration:none; font-weight:bold;">{name}</a>{highlight_html}</td>
-                <td style="text-align:right;">S/ {price:,.2f}</td>
-            </tr>
-            """
-        except: continue
-
-    html += f"""
-            </tbody>
-        </table>
-        <div class="boleta-total">
-            TOTAL: S/ {total_real:,.2f}
+    rows_html = ""
+    for c in components:
+        # Normalizar nombres de categoría para mostrar
+        cat_raw = c.get('category', 'Componente').upper()
+        cat_display = cat_raw
+        if "PROCESADOR" in cat_raw or "CPU" in cat_raw: cat_display = "PROCESADOR"
+        elif "PLACA" in cat_raw: cat_display = "PLACA MADRE"
+        elif "VIDEO" in cat_raw or "GPU" in cat_raw: cat_display = "TARJETA VIDEO"
+        elif "RAM" in cat_raw: cat_display = "MEMORIA RAM"
+        elif "FUENTE" in cat_raw: cat_display = "FUENTE PODER"
+        
+        name = c.get('name', 'Producto')
+        url = c.get('url', '#')
+        price = float(c.get('price', 0))
+        
+        rows_html += f"""
+        <div class="comp-row">
+            <div class="c-label">{cat_display}</div>
+            <div class="c-val"><a href="{url}" target="_blank">{name}</a></div>
+            <div class="c-price">S/ {price:,.0f}</div>
+        </div>
+        """
+        
+    return f"""
+    <div class="quote-container">
+        <div class="quote-header">
+            <span>{title}</span>
+            <span class="quote-strategy">{strategy}</span>
+        </div>
+        <div class="comp-table">
+            {rows_html}
+        </div>
+        <div class="quote-total">
+            <span style="color:#aaa; font-weight:600;">TOTAL CONTADO</span>
+            <span class="t-num">S/ {total:,.2f}</span>
         </div>
     </div>
     """
+
+def process_response(text, filtered_count=0):
+    """Renderiza la respuesta final."""
+    data = extract_json_from_text(text)
+    if not data or not isinstance(data, dict): return text
+    if not data.get("is_quote"): return data.get("message", text)
+    
+    html = f"<div style='margin-bottom:20px; color:#ddd;'>{data.get('intro','')}</div>"
+    
+    # Renderizar solo las opciones válidas (que ya fueron filtradas en el loop principal)
+    for opt in data.get('options', []):
+        html += render_vertical_option(opt)
+    
+    # Mensaje si se filtraron opciones
+    if filtered_count > 0:
+        html += f"""
+        <div style="background:#332200; border:1px solid #664400; color:#ffcc00; padding:10px; border-radius:8px; font-size:0.9rem; margin-top:10px;">
+            ⚠️ <b>Nota:</b> Se ocultaron {filtered_count} opción(es) porque excedían demasiado tu presupuesto. 
+            ¿Te gustaría ver opciones más económicas o ajustar el presupuesto?
+        </div>
+        """
+    
+    html += f"""
+    <div style='margin-top:20px; color:#ddd;'>{data.get('outro','')}</div>
+    <a href="{WHATSAPP_LINK}" target="_blank" class="btn-whatsapp">
+        🚀 SOLICITAR DESCUENTO EXCLUSIVO EN WHATSAPP
+    </a>
+    """
     return html
 
-def parse_and_render_response(text):
-    """
-    Renderiza la respuesta usando HTML puro si es una cotización.
-    """
-    data = extract_json_from_text(text)
-    
-    if data and isinstance(data, dict):
-        # Si es mensaje simple
-        if not data.get("is_quote"):
-            return data.get("message", text)
-
-        # Si es cotización
-        try:
-            intro = data.get('intro', '')
-            options = data.get('options', [])
-            outro = data.get('outro', '')
-            
-            # Construir salida final
-            final_html = f"<div style='margin-bottom:15px;'>{intro}</div>"
-            
-            for opt in options:
-                final_html += generate_html_boleta(opt)
-            
-            final_html += f"<div style='margin-top:15px;'>{outro}</div>"
-            
-            # Botón de WhatsApp
-            wa_button = f"""
-            <div style="text-align:center; margin-top:20px;">
-                <a href="{WHATSAPP_LINK}" target="_blank" style="
-                    background-color: #25D366;
-                    color: white;
-                    padding: 10px 20px;
-                    text-decoration: none;
-                    border-radius: 25px;
-                    font-weight: bold;
-                    display: inline-block;
-                    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-                ">
-                📲 SOLICITAR DESCUENTO EXCLUSIVO EN WHATSAPP
-                </a>
-            </div>
-            """
-            
-            return final_html + wa_button
-            
-        except Exception as e:
-            print(f"Error renderizando HTML: {e}")
-            return text 
-            
-    return text
-
-# --- LÓGICA DE CLIENTE Y CACHE ---
+# --- CONFIGURACIÓN DE IA ---
 def get_api_key():
     try: return st.secrets["GEMINI_API_KEY"]
     except: return os.getenv("GEMINI_API_KEY", "")
@@ -308,195 +268,183 @@ api_key = get_api_key()
 if not api_key:
     with st.sidebar:
         st.warning("⚠️ API Key no encontrada")
-        api_key = st.text_input("Ingresa tu Gemini API Key:", type="password")
-        if not api_key: st.stop()
+        st.stop()
 
 client = genai.Client(api_key=api_key)
-# Usamos temperatura 0.0 para máxima precisión matemática y de formato
 MODEL_ID = 'models/gemini-2.0-flash'
 
 @st.cache_resource
 def setup_kiwi_brain():
-    """Inicializa con SISTEMA V23: FORMATO ESTRICTO Y COMPLETITUD"""
     try:
-        path = 'catalogo_kiwigeek.json'
-        if not os.path.exists(path): return None, "Error: Archivo no encontrado."
-        with open(path, 'r', encoding='utf-8') as f: catalog_data = f.read()
-
-        system_instruction = (
-            "ROL: Kiwigeek AI. Tu ÚNICA función es generar JSON válido.\n"
-            "CONTEXTO: Tienes un inventario de hardware. Usa LINKS reales.\n\n"
-            "--- FASE 1: FILTRO DE ALCANCE ---\n"
-            "Si el usuario NO especifica 'Solo Torre' o 'PC Completa', responde ESTO y NADA MÁS:\n"
-            "```json\n"
-            "{ \"is_quote\": false, \"message\": \"Hola 👋 Para darte el mejor precio, ¿buscas solo la torre (CPU) o la PC completa con monitor y periféricos?\" }\n"
-            "```\n\n"
-            "--- FASE 2: GENERACIÓN DE COTIZACIÓN ---\n"
-            "Si tienes el alcance, genera 3 opciones (A, B, C) en este formato JSON EXACTO:\n"
+        with open('catalogo_kiwigeek.json', 'r', encoding='utf-8') as f: 
+            catalog = f.read()
+            
+        sys_prompt = (
+            "ERES KIWIGEEK AI. TU OBJETIVO: GENERAR JSON PERFECTO PARA COTIZAR PC.\n"
+            "INPUT: Usuario pide PC y da presupuesto.\n"
+            "OUTPUT: JSON estricto.\n\n"
+            "--- FASE 1: VALIDACIÓN ---\n"
+            "Si el usuario NO dice si quiere 'Solo Torre' o 'PC Completa', devuelve:\n"
+            "{ \"is_quote\": false, \"message\": \"👋 Hola, para ajustarme a tu presupuesto, ¿necesitas solo la torre (CPU) o la PC completa con monitor?\" }\n\n"
+            "--- FASE 2: GENERACIÓN (3 OPCIONES) ---\n"
+            "Genera SIEMPRE 3 opciones (A, B, C) intentando acercarte al presupuesto.\n"
+            "JSON OBLIGATORIO:\n"
             "```json\n"
             "{\n"
-            '  "is_quote": true,\n'
-            '  "detected_budget": 0,\n'
-            '  "intro": "Texto de introducción...",\n'
-            '  "options": [\n'
-            '    {\n'
-            '      "title": "Opción A - Económica", "strategy": "...",\n'
-            '      "components": [\n'
-            '         {"category": "PROCESADOR", "name": "...", "price": 0, "url": "..."},\n'
-            '         {"category": "PLACA MADRE", "name": "...", "price": 0, "url": "..."},\n'
-            '         {"category": "MEMORIA RAM", "name": "...", "price": 0, "url": "..."},\n'
-            '         {"category": "ALMACENAMIENTO", "name": "...", "price": 0, "url": "..."},\n'
-            '         {"category": "TARJETA DE VIDEO", "name": "...", "price": 0, "url": "..."},\n'
-            '         {"category": "FUENTE DE PODER", "name": "...", "price": 0, "url": "..."},\n'
-            '         {"category": "CASE", "name": "...", "price": 0, "url": "..."}\n'
-            '      ]\n'
-            '    }\n'
-            '    // ... Opción B y C ...\n'
-            '  ],\n'
-            '  "outro": "Texto final..."\n'
+            "  \"is_quote\": true,\n"
+            "  \"detected_budget\": 0,\n"
+            "  \"intro\": \"Texto breve...\",\n"
+            "  \"options\": [\n"
+            "    {\n"
+            "      \"title\": \"Opción A\", \"strategy\": \"...\",\n"
+            "      \"components\": [\n"
+            "         {\"category\": \"CPU\", \"name\": \"...\", \"price\": 0, \"url\": \"...\"},\n"
+            "         {\"category\": \"PLACA\", \"name\": \"...\", \"price\": 0, \"url\": \"...\"}\n"
+            "      ]\n"
+            "    }\n"
+            "  ],\n"
+            "  \"outro\": \"...\"\n"
             "}\n"
             "```\n"
-            "REGLAS CRÍTICAS:\n"
-            "1. **PRESUPUESTO**: La suma de precios NO puede exceder el presupuesto del usuario +10%.\n"
-            "2. **COMPLETITUD**: No olvides NINGÚN componente. Si falta uno, la PC no prende.\n"
-            "3. **SOLO JSON**: No escribas 'Aquí tienes...' fuera del bloque JSON.\n"
+            "REGLAS:\n"
+            "1. NO sumes totales. Solo precios unitarios.\n"
+            "2. Incluye TODOS los componentes necesarios.\n"
         )
-
-        try:
-            cache = client.caches.create(
-                model=MODEL_ID,
-                config=types.CreateCachedContentConfig(
-                    display_name='kiwigeek_v23_strict_boleta',
-                    system_instruction=system_instruction,
-                    contents=[catalog_data],
-                    ttl='7200s',
-                )
+        
+        return client.caches.create(
+            model=MODEL_ID,
+            config=types.CreateCachedContentConfig(
+                display_name='kiwigeek_v25_vertical_filter',
+                system_instruction=sys_prompt,
+                contents=[catalog],
+                ttl='7200s'
             )
-            return cache.name, None
-        except:
-            fallback = f"{system_instruction}\n\nCATÁLOGO:\n{catalog_data}"
-            return None, fallback
-    except Exception as e: return None, str(e)
+        ).name, None
+    except Exception as e:
+        return None, str(e)
 
-# --- INICIO DE SESIÓN ---
+# --- APP MAIN LOOP ---
 if "messages" not in st.session_state: st.session_state.messages = []
-if "is_cached_active" not in st.session_state: st.session_state.is_cached_active = False
-
 if "chat_session" not in st.session_state:
-    cache_name, fallback = setup_kiwi_brain()
-    if fallback and fallback.startswith("Error"): st.error(fallback); st.stop()
+    cache_name, err = setup_kiwi_brain()
+    if err and "catalogo" not in err: st.error(err); st.stop()
     
-    # TEMPERATURA 0.0 PARA PRECISIÓN MÁXIMA
-    config = types.GenerateContentConfig(temperature=0.0, top_p=0.8, max_output_tokens=8192)
-    
-    if cache_name: config.cached_content = cache_name; st.session_state.is_cached_active = True
-    else: config.system_instruction = fallback; st.session_state.is_cached_active = False
+    config = types.GenerateContentConfig(temperature=0.1, top_p=0.8, max_output_tokens=8192)
+    if cache_name: config.cached_content = cache_name
     
     st.session_state.chat_session = client.chats.create(model=MODEL_ID, config=config)
-
+    
     if not st.session_state.messages:
         st.session_state.messages.append({
-            "role": "assistant", 
-            "content": "¡Hola! Soy el asistente de **Kiwigeek**. 🐱\n\n¿Buscas una PC para gaming, diseño o trabajo pesado? Dime tu presupuesto y diseñaremos la mejor configuración para ti."
+            "role": "assistant",
+            "content": "¡Hola! Soy **Kiwigeek AI**. 🥝\n\nDime tu presupuesto y si buscas **Solo Torre** o **PC Completa**."
         })
 
-# --- INTERFAZ ---
+# --- UI ---
 with st.sidebar:
     st.image('https://kiwigeekperu.com/wp-content/uploads/2025/06/Diseno-sin-titulo-24.png')
-    if st.session_state.is_cached_active: st.success("⚡ **Caché Activo**")
-    else: st.warning("⚠️ **Modo Estándar**")
-    st.markdown("---")
-    if st.button("🗑️ Limpiar Conversación", use_container_width=True):
+    if st.button("🗑️ Reiniciar Chat", use_container_width=True):
         st.session_state.messages = []
-        if "chat_session" in st.session_state: del st.session_state["chat_session"]
+        del st.session_state["chat_session"]
         st.rerun()
 
 st.markdown("""
-    <div style="display: flex; justify-content: center; align-items: center; gap: 10px; padding-bottom: 10px;">
-        <img src="https://kiwigeekperu.com/wp-content/uploads/2025/06/Diseno-sin-titulo-24.png" 
-             style="height: 90px; object-fit: contain; filter: drop-shadow(0 0 5px rgba(0, 255, 65, 0.3));">
-        <h1 class='neon-title' style='margin: 0; padding: 0; font-size: 3.5rem !important; display: inline-block;'>AI</h1>
+    <div style="text-align:center; padding-bottom: 20px;">
+        <img src="https://kiwigeekperu.com/wp-content/uploads/2025/06/Diseno-sin-titulo-24.png" height="80">
+        <h1 class='neon-title'>AI</h1>
+        <p style='color:#666;'>Ingeniería de Hardware v25.0</p>
     </div>
 """, unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; color: #888;'>Ingeniería de hardware de alto nivel</p>", unsafe_allow_html=True)
 
-# Renderizado Historial (Soporta HTML seguro)
+# Renderizar mensajes anteriores
 for msg in st.session_state.messages:
     if msg["role"] == "assistant":
         with st.chat_message(msg["role"], avatar=AVATAR_URL):
-            st.markdown(parse_and_render_response(msg["content"]), unsafe_allow_html=True)
+            # Recuperamos metadata si existe (para saber si hubo filtrados previos)
+            filtered = msg.get("filtered_count", 0)
+            st.markdown(process_response(msg["content"], filtered), unsafe_allow_html=True)
     else:
-        with st.chat_message(msg["role"], avatar=msg.get("avatar", USER_AVATARS[0])):
+        with st.chat_message("user", avatar=random.choice(USER_AVATARS)):
             st.markdown(msg["content"])
 
-# INPUT Y LÓGICA PRINCIPAL CON AUDITORÍA
-if prompt := st.chat_input("Ej: Tengo S/ 4000..."):
-    current_avatar = random.choice(USER_AVATARS)
-    st.session_state.messages.append({"role": "user", "content": prompt, "avatar": current_avatar})
-    
-    with st.chat_message("user", avatar=current_avatar):
+if prompt := st.chat_input("Ej: Tengo S/ 3800 para PC Completa..."):
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    with st.chat_message("user", avatar=random.choice(USER_AVATARS)):
         st.markdown(prompt)
 
     with st.chat_message("assistant", avatar=AVATAR_URL):
         placeholder = st.empty()
-        with st.spinner("🔍 Diseñando configuración a medida..."):
+        with st.spinner("🤖 Analizando y auditando opciones..."):
             try:
-                if "chat_session" not in st.session_state: raise Exception("Sesión perdida")
-                
-                # 1. GENERACIÓN
+                # 1. Generación
+                if "chat_session" not in st.session_state: raise Exception("Reload")
                 response = st.session_state.chat_session.send_message(prompt)
-                raw_text = response.text
+                raw = response.text
                 
-                # 2. AUDITORÍA (LOOP DE CORRECCIÓN)
+                # 2. FILTRO Y AUDITORÍA (PYTHON JUDGE)
+                # Intentamos hasta 2 veces si TODAS las opciones son malas
                 max_retries = 2
                 attempt = 0
+                final_json = None
+                filtered_count = 0
+                
                 while attempt < max_retries:
-                    data = extract_json_from_text(raw_text)
+                    data = extract_json_from_text(raw)
                     
-                    # Si no es JSON válido o es charla simple, salir
-                    if not data or not isinstance(data, dict):
-                        # Si parece intento de cotización fallido
-                        if "Opción" in raw_text:
-                            attempt += 1
-                            error_msg = "ERROR: Respond in VALID JSON ONLY. No text."
-                            response = st.session_state.chat_session.send_message(error_msg)
-                            raw_text = response.text
-                            continue
-                        else:
-                            break # Charla normal
-                    
-                    if not data.get("is_quote"): break # Es pregunta de aclaración
+                    # Si no es cotización, pasar directo
+                    if not data or not data.get("is_quote"): 
+                        final_json = raw # Texto plano
+                        break
                     
                     budget = float(data.get("detected_budget", 0))
-                    if budget == 0: break 
+                    if budget == 0: 
+                        final_json = json.dumps(data)
+                        break
                     
-                    feedback = []
-                    needs_fix = False
+                    # AUDITORÍA: Filtrar opciones malas
+                    valid_options = []
+                    filtered_in_this_run = 0
+                    
                     for opt in data.get('options', []):
-                        # Sumar componentes
-                        total_real = sum(float(c.get('price', 0)) for c in opt.get('components', []))
-                        # Margen estricto 10%
-                        limit = budget * 1.10 
-                        if total_real > limit:
-                            needs_fix = True
-                            feedback.append(f"• Option '{opt.get('title')}' is S/ {total_real:.2f} (Max allowed: S/ {limit:.2f}).")
+                        total = sum(float(c['price']) for c in opt['components'])
+                        # Margen de tolerancia: 10%
+                        limit = budget * 1.10
+                        
+                        if total <= limit:
+                            valid_options.append(opt)
+                        else:
+                            filtered_in_this_run += 1
+                            print(f"Opción rechazada: S/ {total} (Límite S/ {limit})")
                     
-                    if needs_fix:
-                        attempt += 1
-                        error_msg = f"AUDIT FAILED: Budget S/ {budget}. Too expensive:\n" + "\n".join(feedback) + "\nREGENERATE JSON CHEAPER."
-                        response = st.session_state.chat_session.send_message(error_msg)
-                        raw_text = response.text
+                    # DECISIÓN
+                    if len(valid_options) > 0:
+                        # Tenemos opciones válidas!
+                        data['options'] = valid_options # Reemplazamos las opciones en el JSON
+                        final_json = json.dumps(data)
+                        filtered_count = filtered_in_this_run
+                        break # Salimos del loop y mostramos lo que hay
                     else:
-                        break # Todo correcto
-
-                # 3. MOSTRAR RESULTADO
-                final_html = parse_and_render_response(raw_text)
+                        # TODAS las opciones eran malas. Pedimos regeneración.
+                        attempt += 1
+                        msg = f"ERROR: All options exceeded budget of S/ {budget}. The cheapest was S/ {total}. REGENERATE CHEAPER options please."
+                        raw = st.session_state.chat_session.send_message(msg).text
+                        # Loop continua...
+                
+                # Si falló todo y sigue sin JSON o sin opciones válidas, mostramos lo último que llegó
+                if final_json is None: final_json = raw
+                
+                # 3. Renderizar
+                final_html = process_response(final_json, filtered_count)
                 placeholder.markdown(final_html, unsafe_allow_html=True)
-                st.session_state.messages.append({"role": "assistant", "content": raw_text})
-
-            except Exception as e:
-                st.error("Conexión inestable. Reiniciando...")
+                
+                # Guardar en historial con metadata
+                st.session_state.messages.append({
+                    "role": "assistant", 
+                    "content": final_json,
+                    "filtered_count": filtered_count
+                })
+                
+            except:
+                st.error("Conexión perdida. Reiniciando cerebro...")
                 if "chat_session" in st.session_state: del st.session_state["chat_session"]
                 st.rerun()
-
-st.markdown("<br><hr><p style='text-align: center; color: #555;'>© 2025 Kiwigeek Perú - Hardware for Professionals</p>", unsafe_allow_html=True)
