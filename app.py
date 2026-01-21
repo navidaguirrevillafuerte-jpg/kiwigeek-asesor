@@ -23,22 +23,6 @@ COLORS = {
 AVATAR_URL = "https://kiwigeekperu.com/wp-content/uploads/2026/01/gatitow.webp"
 WHATSAPP_LINK = "https://api.whatsapp.com/send/?phone=51939081940&text=Hola%2C+me+gustar%C3%ADa+saber+m%C3%A1s+de+sus+productos&type=phone_number&app_absent=0"
 
-# --- ORDEN ESTRICTO POR FILAS (TU PEDIDO) ---
-COMPONENT_PRIORITY = {
-    "PROCESADOR": 1, "CPU": 1,
-    "PLACA": 2, "MOTHERBOARD": 2, "PLACA MADRE": 2, "MAINBOARD": 2,
-    "VIDEO": 3, "GPU": 3, "TARJETA DE VIDEO": 3, "GRÁFICA": 3,
-    "MEMORIA": 4, "RAM": 4, "MEMORIA RAM": 4,
-    "ALMACENAMIENTO": 5, "SSD": 5, "DISCO": 5, "M.2": 5,
-    "FUENTE": 6, "PSU": 6, "FUENTE DE PODER": 6,
-    "CASE": 7, "GABINETE": 7, "CHASIS": 7, "TORRE": 7,
-    "MONITOR": 8, "PANTALLA": 8,
-    "TECLADO": 9,
-    "MOUSE": 10,
-    "AUDIFONOS": 11,
-    "REFRIGERACIÓN": 12, "COOLER": 12
-}
-
 USER_AVATARS = ["🧑‍💻", "👨‍💻", "👩‍💻", "🦸", "🦹", "🧙", "🧚", "🧛", "🧜", "🧝"]
 
 # --- CSS LIMPIO Y ORDENADO ---
@@ -189,18 +173,13 @@ def extract_json_from_text(text):
         pass
     return None
 
-def get_sort_priority(component):
-    """Ordena según tu lista (CPU -> Placa -> GPU...)."""
-    cat = component.get('category', '').upper()
-    for key, priority in COMPONENT_PRIORITY.items():
-        if key in cat: return priority
-    return 99
-
 def render_vertical_option(option):
     """Renderiza UNA opción en formato vertical limpio."""
     title = option.get('title', 'Opción')
     strategy = option.get('strategy', '')
-    components = sorted(option.get('components', []), key=get_sort_priority)
+    
+    # --- CAMBIO V28: ORDENAMIENTO POR IA (Python respeta el orden del JSON) ---
+    components = option.get('components', []) 
     
     total = sum(float(c.get('price', 0)) for c in components)
     
@@ -328,12 +307,13 @@ def setup_kiwi_brain():
             "REGLAS:\n"
             "1. NO sumes totales. Solo precios unitarios.\n"
             "2. Incluye TODOS los componentes necesarios.\n"
+            "3. ORDENA OBLIGATORIAMENTE la lista 'components' así: PROCESADOR -> PLACA -> RAM -> GPU -> SSD -> FUENTE -> CASE -> (MONITOR/PERIFÉRICOS).\n"
         )
         
         return client.caches.create(
             model=MODEL_ID,
             config=types.CreateCachedContentConfig(
-                display_name='kiwigeek_v27_final_repair',
+                display_name='kiwigeek_v28_ai_sort_prompt',
                 system_instruction=sys_prompt,
                 contents=[catalog],
                 ttl='7200s'
@@ -371,7 +351,7 @@ st.markdown("""
     <div style="text-align:center; padding-bottom: 20px;">
         <img src="https://kiwigeekperu.com/wp-content/uploads/2025/06/Diseno-sin-titulo-24.png" height="80">
         <h1 class='neon-title'>AI</h1>
-        <p style='color:#666;'>Ingeniería de Hardware v27.0</p>
+        <p style='color:#666;'>Ingeniería de Hardware v28.0</p>
     </div>
 """, unsafe_allow_html=True)
 
