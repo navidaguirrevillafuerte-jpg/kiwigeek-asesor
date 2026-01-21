@@ -14,7 +14,7 @@ st.set_page_config(
 
 # --- CONSTANTES ---
 AVATAR_URL = "https://kiwigeekperu.com/wp-content/uploads/2026/01/gatitow.webp"
-WHATSAPP_LINK = "https://api.whatsapp.com/send/?phone=51939081940&text=Hola%2C+me+gustar%C3%ADa+saber+m%C3%A1s+de+sus+productos&type=phone_number&app_absent=0"
+WHATSAPP_LINK = "https://api.whatsapp.com/send/?phone=51939081940&text=Hola%2C+vengo+del+Chat+AI+y+quiero+reclamar+mi+descuento+especial+por+PC+Completa&type=phone_number&app_absent=0"
 
 # --- CSS MIXTO (Header Neón + Chat Limpio + Sidebar Mejorado) ---
 def apply_custom_styles():
@@ -104,11 +104,39 @@ def apply_custom_styles():
             padding-bottom: 5px;
         }
         
+        /* Título DORADO (Promoción) */
+        .info-title-promo {
+            color: #d4ac0d; 
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #ffd700;
+            padding-bottom: 5px;
+        }
+        
         .info-list {
             padding-left: 20px; 
             color: #333; 
             font-size: 0.9rem;
             margin-bottom: 0;
+        }
+        
+        /* Botón de WhatsApp en Sidebar */
+        .promo-btn {
+            display: block;
+            width: 100%;
+            text-align: center;
+            background-color: #25D366;
+            color: white !important;
+            padding: 8px 0;
+            border-radius: 5px;
+            text-decoration: none !important;
+            font-weight: bold;
+            margin-top: 10px;
+            transition: opacity 0.3s;
+        }
+        .promo-btn:hover {
+            opacity: 0.9;
         }
         </style>
     """, unsafe_allow_html=True)
@@ -160,6 +188,7 @@ REGLAS DE FORMATO (ESTRICTAS):
 3. Formato de línea de producto: "Nombre del Producto - Precio - [Ver Link](url)"
 4. Usa listas simples (-).
 5. Mantén un tono profesional y directo.
+6. IMPORTANTE: NO expliques las reglas del descuento por PC completa (ya están visibles en la pantalla). Solo da precios y links.
 
 EJEMPLO DE RESPUESTA DESEADA:
 Hola, aquí tienes una opción para tu presupuesto:
@@ -228,6 +257,19 @@ with st.sidebar:
             <li><b>Verifico compatibilidad</b> de piezas.</li>
             <li><b>Doy precios y links</b> directos.</li>
         </ul>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Panel 🎁 PROMOCIÓN ESPECIAL (NUEVO)
+    st.markdown(f"""
+    <div class="info-box" style="border: 1px solid #ffd700; background: #fffdf0;">
+        <div class="info-title-promo">🎁 ¡Promoción Especial!</div>
+        <p style="font-size: 0.9rem; color: #333; margin-bottom: 10px; line-height: 1.4;">
+            Al comprar tu PC completa (<b>Procesador, Video, RAM y Placa</b>) accedes automáticamente a un <b style="color:#d4ac0d;">Descuento Especial</b>.
+        </p>
+        <a href="{WHATSAPP_LINK}" target="_blank" class="promo-btn">
+            📲 Reclamar Descuento
+        </a>
     </div>
     """, unsafe_allow_html=True)
 
