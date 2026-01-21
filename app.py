@@ -170,10 +170,8 @@ def extract_json_from_text(text):
         match = re.search(r'\{.*\}', text, re.DOTALL)
         if match: text_clean = match.group(0)
         
-        # Limpieza V34: CORREGIDO - No romper URLs
-        # Solo eliminamos comentarios si NO están precedidos por ':' (como en http://)
+        # Limpieza: No romper URLs
         text_clean = re.sub(r'(?<!:)\/\/.*?\n', '\n', text_clean)
-        
         text_clean = re.sub(r',\s*\}', '}', text_clean)
         text_clean = re.sub(r',\s*\]', ']', text_clean)
         text_clean = text_clean.replace("True", "true").replace("False", "false").replace("None", "null")
@@ -192,7 +190,6 @@ def render_vertical_option(option):
     """Renderiza UNA opción usando una TABLA HTML REAL."""
     title = option.get('title', 'Opción')
     strategy = option.get('strategy', '')
-    # ORDENAMIENTO: Respetamos 100% el orden que viene de la IA
     components = option.get('components', []) 
     
     total = sum(float(c.get('price', 0)) for c in components)
@@ -237,16 +234,21 @@ def render_vertical_option(option):
     """
 
 def process_response(text, filtered_count=0):
-    """Renderiza la respuesta final."""
+    """Renderiza la respuesta final directamente en Streamlit."""
     data = extract_json_from_text(text)
     
     if not data or not isinstance(data, dict): 
-        # Fallback de emergencia a texto plano si falla todo
-        clean_text = text.replace("```json", "").replace("```", "")
+        # Fallback: Si no es JSON válido, mostrar como texto normal
+        clean_text = text.replace("```json", "").replace("```", "").replace("```html", "")
+        st.markdown(clean_text)
         return clean_text
         
-    if not data.get("is_quote"): return data.get("message", text)
+    if not data.get("is_quote"): 
+        message = data.get("message", text)
+        st.markdown(message)
+        return message
     
+    # Construir HTML
     html = f"<div style='margin-bottom:20px; color:#ddd;'>{data.get('intro','')}</div>"
     
     for opt in data.get('options', []):
@@ -265,6 +267,8 @@ def process_response(text, filtered_count=0):
         🚀 SOLICITAR DESCUENTO EXCLUSIVO EN WHATSAPP
     </a>
     """
+    
+    st.markdown(html, unsafe_allow_html=True)
     return html
 
 # --- CONFIGURACIÓN DE IA ---
@@ -368,7 +372,7 @@ st.markdown("""
     <div style="text-align:center; padding-bottom: 20px;">
         <img src="https://kiwigeekperu.com/wp-content/uploads/2025/06/Diseno-sin-titulo-24.png" height="80">
         <h1 class='neon-title'>AI</h1>
-        <p style='color:#666;'>Ingeniería de Hardware v34.0</p>
+        <p style='color:#666;'>Ingeniería de Hardware v34.1</p>
     </div>
 """, unsafe_allow_html=True)
 
@@ -377,7 +381,13 @@ for msg in st.session_state.messages:
     if msg["role"] == "assistant":
         with st.chat_message(msg["role"], avatar=AVATAR_URL):
             filtered = msg.get("filtered_count", 0)
-            st.markdown(process_response(msg["content"], filtered), unsafe_allow_html=True)
+            content = msg["content"]
+            
+            # Verificar si ya es HTML procesado
+            if content.startswith("<div") or content.startswith("<table"):
+                st.markdown(content, unsafe_allow_html=True)
+            else:
+                process_response(content, filtered)
     else:
         with st.chat_message("user", avatar=random.choice(USER_AVATARS)):
             st.markdown(msg["content"])
@@ -395,7 +405,7 @@ if prompt := st.chat_input("Ej: Tengo S/ 3800 para PC Completa..."):
                 response = st.session_state.chat_session.send_message(prompt)
                 raw = response.text
                 
-                # 2. FILTRO Y AUDITORÍA
+                # FILTRO Y AUDITORÍA
                 max_retries = 3 
                 attempt = 0
                 final_json = None
@@ -447,12 +457,14 @@ if prompt := st.chat_input("Ej: Tengo S/ 3800 para PC Completa..."):
                 
                 if final_json is None: final_json = raw.replace("```json", "").replace("```", "")
                 
-                final_html = process_response(final_json, filtered_count)
-                placeholder.markdown(final_html, unsafe_allow_html=True)
+                # Renderizar directamente
+                with placeholder.container():
+                    final_html = process_response(final_json, filtered_count)
                 
+                # Guardar el HTML ya procesado
                 st.session_state.messages.append({
                     "role": "assistant", 
-                    "content": final_json,
+                    "content": final_html if final_html else final_json,
                     "filtered_count": filtered_count
                 })
                 
