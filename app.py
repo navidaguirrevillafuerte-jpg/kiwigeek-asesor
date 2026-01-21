@@ -36,7 +36,7 @@ USER_AVATARS = [
 def apply_custom_styles():
     st.markdown(f"""
         <style>
-        /* Force reload styles v3.0 */
+        /* Force reload styles v3.1 - Menu Restored */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
         
         * {{ font-family: 'Inter', sans-serif !important; }}
@@ -107,11 +107,12 @@ def apply_custom_styles():
             margin: auto !important;
         }}
 
-        /* Ocultar elementos de la interfaz por defecto */
-        #MainMenu {{visibility: hidden;}}
-        header {{visibility: hidden;}}
+        /* Solo ocultamos el Footer (Made with Streamlit), mostramos el resto */
         footer {{visibility: hidden;}}
-        [data-testid="stToolbar"] {{visibility: hidden !important;}}
+        
+        /* El header y toolbar ahora son visibles para que puedas recargar la caché */
+        /* #MainMenu {{visibility: visible;}} */
+        /* header {{visibility: visible;}} */
         </style>
     """, unsafe_allow_html=True)
 
