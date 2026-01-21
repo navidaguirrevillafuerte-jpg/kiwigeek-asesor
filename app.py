@@ -72,6 +72,14 @@ def apply_custom_styles():
         .stChatInputContainer {{
             padding-bottom: 20px !important;
         }}
+        
+        /* Ajustar ancho del contenedor principal para centrarlo y dar aire a los lados */
+        .block-container {{
+            max-width: 900px !important;
+            padding-left: 2rem !important;
+            padding-right: 2rem !important;
+            margin: auto !important;
+        }}
 
         /* Ocultar elementos de la interfaz por defecto (Hamburguesa, Header, Footer) */
         #MainMenu {{visibility: hidden;}}
@@ -213,3 +221,4 @@ if prompt := st.chat_input("Ej: Tengo S/ 4000 para una PC de Streaming..."):
 
 # Footer
 st.markdown("<br><hr><p style='text-align: center; color: #555;'>© 2025 Kiwigeek Perú - Hardware for Professionals</p>", unsafe_allow_html=True)
+
