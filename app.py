@@ -232,32 +232,40 @@ Si deseas comprar, escríbenos al WhatsApp.
     except Exception as e:
         return None, str(e)
 
-# --- APP MAIN LOOP ---
-if "messages" not in st.session_state: 
-    st.session_state.messages = []
+# --- FUNCIÓN DE INICIALIZACIÓN ROBUSTA (AUTO-RECONEXIÓN) ---
+def initialize_session():
+    """Inicia o recupera la sesión de chat sin errores visibles"""
+    if "messages" not in st.session_state: 
+        st.session_state.messages = []
 
-if "chat_session" not in st.session_state:
-    cache_name, err = setup_kiwi_brain()
-    if err and "catalogo" not in err: 
-        st.error(err)
-        st.stop()
-    
-    config = types.GenerateContentConfig(
-        temperature=0.1, 
-        top_p=0.80, 
-        max_output_tokens=8192
-    )
-    if cache_name: 
-        config.cached_content = cache_name
-    
-    st.session_state.chat_session = client.chats.create(model=MODEL_ID, config=config)
-    
-    # Mensaje de bienvenida simple
-    if not st.session_state.messages:
-        st.session_state.messages.append({
-            "role": "assistant",
-            "content": "Hola. Dime qué necesitas cotizar y te daré los precios y links."
-        })
+    # Si no hay sesión activa, crearla
+    if "chat_session" not in st.session_state:
+        cache_name, err = setup_kiwi_brain()
+        if err and "catalogo" not in err: 
+            st.error(f"Error crítico al conectar cerebro: {err}")
+            st.stop()
+        
+        config = types.GenerateContentConfig(
+            temperature=0.1, 
+            top_p=0.80, 
+            max_output_tokens=8192
+        )
+        if cache_name: 
+            config.cached_content = cache_name
+        
+        # Crear la sesión
+        st.session_state.chat_session = client.chats.create(model=MODEL_ID, config=config)
+        
+        # Mensaje de bienvenida solo si es el inicio absoluto
+        if not st.session_state.messages:
+            st.session_state.messages.append({
+                "role": "assistant",
+                "content": "Hola. Dime qué necesitas cotizar y te daré los precios y links."
+            })
+
+# --- APP MAIN LOOP ---
+# Llamamos a la inicialización al principio para asegurar que todo esté listo
+initialize_session()
 
 # --- UI (SIDEBAR MODIFICADO) ---
 with st.sidebar:
@@ -339,9 +347,9 @@ if prompt := st.chat_input("Escribe aquí tu consulta..."):
     with st.chat_message("assistant", avatar=AVATAR_URL):
         with st.spinner("Consultando precios..."):
             try:
+                # AUTO-REPARACIÓN: Si la sesión se perdió, la recreamos silenciosamente
                 if "chat_session" not in st.session_state:
-                    st.error("Error: Sesión perdida. Recarga la página.")
-                    st.stop()
+                    initialize_session()
                 
                 response = st.session_state.chat_session.send_message(prompt)
                 raw_text = response.text
@@ -360,4 +368,14 @@ if prompt := st.chat_input("Escribe aquí tu consulta..."):
                 })
                 
             except Exception as e:
-                st.error(f"Error: {str(e)}")
+                # Intento final de recuperación si falla la API
+                try:
+                    initialize_session()
+                    response = st.session_state.chat_session.send_message(prompt)
+                    clean_text = clean_response(response.text)
+                    if "WhatsApp" not in clean_text:
+                        clean_text += f"\n\n[Escribir al WhatsApp]({WHATSAPP_LINK})"
+                    st.markdown(clean_text)
+                    st.session_state.messages.append({"role": "assistant", "content": clean_text})
+                except:
+                    st.error(f"Error de conexión: {str(e)}. Por favor intenta de nuevo.")
