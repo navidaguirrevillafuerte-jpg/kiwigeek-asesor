@@ -70,28 +70,35 @@ def apply_custom_styles():
 
         /* --- ESTILOS DEL INPUT DE CHAT --- */
         .stChatInputContainer {{
-            padding-bottom: 30px !important; /* Subir un poco el input */
+            padding-bottom: 90px !important; /* Subido significativamente */
             padding-top: 10px !important;
             background-color: transparent !important;
         }}
 
         /* Estilizar la caja de texto misma */
         .stChatInput textarea {{
-            background-color: #252525 !important; /* Fondo más visible */
-            border: 1px solid #444 !important;    /* Borde sutil */
-            color: #fff !important;
+            background-color: #f0f0f0 !important; /* Fondo gris claro (NO negro) */
+            border: 2px solid #ccc !important;
+            color: #333 !important; /* Texto gris oscuro (NO negro puro) */
+            caret-color: #333 !important; /* Cursor gris oscuro */
             border-radius: 12px !important;
+        }}
+        
+        /* Color del placeholder (texto de ayuda) */
+        .stChatInput textarea::placeholder {{
+            color: #666 !important;
         }}
         
         /* Efecto focus en el input */
         .stChatInput textarea:focus {{
-            border: 1px solid {COLORS['kiwi_green']} !important;
-            box-shadow: 0 0 10px rgba(0, 255, 65, 0.2) !important;
+            border: 2px solid {COLORS['kiwi_green']} !important;
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.2) !important;
+            background-color: #ffffff !important;
         }}
         
         /* Ajustar ancho del contenedor principal (Punto medio) */
         .block-container {{
-            max-width: 1000px !important; /* Antes 900px, ahora un poco más ancho */
+            max-width: 1000px !important;
             padding-left: 2rem !important;
             padding-right: 2rem !important;
             margin: auto !important;
