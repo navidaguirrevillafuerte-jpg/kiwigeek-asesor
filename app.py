@@ -3,6 +3,7 @@ import os
 import json
 import random
 import re
+import ast # Importado para reparaciones de emergencia
 from google import genai
 from google.genai import types
 
@@ -149,28 +150,36 @@ if not os.path.exists('catalogo_kiwigeek.json'):
 # --- MOTORES DE LÓGICA ---
 
 def extract_json_from_text(text):
-    """Extrae JSON limpio y repara errores comunes de IA (CIRUJANO DE CÓDIGO)."""
+    """Extrae JSON limpio y repara errores comunes de IA (CIRUJANO DE CÓDIGO V29)."""
+    text_clean = text
     try:
         # 1. Buscar bloque de código ```json ... ```
         json_match = re.search(r'```json\s*(.*?)\s*```', text, re.DOTALL)
-        content = json_match.group(1) if json_match else text
+        if json_match:
+            text_clean = json_match.group(1)
+        else:
+            # 2. Limpieza agresiva: Encontrar primer { y último }
+            start = text.find('{')
+            end = text.rfind('}')
+            if start != -1 and end != -1:
+                text_clean = text[start:end+1]
         
-        # 2. Limpieza agresiva: Encontrar primer { y último }
-        start = content.find('{')
-        end = content.rfind('}')
-        if start != -1 and end != -1:
-            json_str = content[start:end+1]
-            
-            # --- CIRUGÍA PLÁSTICA DE DATOS ---
-            # 1. Eliminar comentarios de estilo JS que la IA a veces pone (// ...)
-            json_str = re.sub(r'//.*', '', json_str)
-            # 2. Eliminar comas traicioneras al final de listas u objetos (error común: {a:1,})
-            json_str = re.sub(r',\s*}', '}', json_str)
-            json_str = re.sub(r',\s*]', ']', json_str)
-            
-            return json.loads(json_str)
+        # --- CIRUGÍA PLÁSTICA DE DATOS ---
+        # 1. Eliminar comentarios
+        text_clean = re.sub(r'//.*', '', text_clean)
+        # 2. Corregir booleanos Python a JSON (Error común de IA)
+        text_clean = text_clean.replace("True", "true").replace("False", "false").replace("None", "null")
+        # 3. Eliminar comas traicioneras
+        text_clean = re.sub(r',\s*}', '}', text_clean)
+        text_clean = re.sub(r',\s*]', ']', text_clean)
+        
+        return json.loads(text_clean)
     except:
-        pass
+        # Fallback supremo: Intentar evaluar como diccionario de Python seguro
+        try:
+            return ast.literal_eval(text_clean)
+        except:
+            pass
     return None
 
 def render_vertical_option(option):
@@ -178,7 +187,7 @@ def render_vertical_option(option):
     title = option.get('title', 'Opción')
     strategy = option.get('strategy', '')
     
-    # --- CAMBIO V28: ORDENAMIENTO POR IA (Python respeta el orden del JSON) ---
+    # ORDENAMIENTO POR IA (Python respeta el orden del JSON)
     components = option.get('components', []) 
     
     total = sum(float(c.get('price', 0)) for c in components)
@@ -193,6 +202,7 @@ def render_vertical_option(option):
         elif "VIDEO" in cat_raw or "GPU" in cat_raw: cat_display = "TARJETA VIDEO"
         elif "RAM" in cat_raw: cat_display = "MEMORIA RAM"
         elif "FUENTE" in cat_raw: cat_display = "FUENTE PODER"
+        elif "ALMACENAMIENTO" in cat_raw or "SSD" in cat_raw: cat_display = "ALMACENAMIENTO"
         
         name = c.get('name', 'Producto')
         url = c.get('url', '#')
@@ -226,9 +236,8 @@ def process_response(text, filtered_count=0):
     """Renderiza la respuesta final."""
     data = extract_json_from_text(text)
     
-    # Si no es JSON válido (o es texto plano), lo mostramos limpio sin el disfraz de código
+    # Si sigue sin ser válido, limpiar el texto crudo para que al menos se lea
     if not data or not isinstance(data, dict): 
-        # Limpieza de emergencia: Si quedó como código, quítale el disfraz para que se lea bien
         clean_text = text.replace("```json", "").replace("```", "")
         return clean_text
         
@@ -236,7 +245,7 @@ def process_response(text, filtered_count=0):
     
     html = f"<div style='margin-bottom:20px; color:#ddd;'>{data.get('intro','')}</div>"
     
-    # Renderizar solo las opciones válidas (que ya fueron filtradas en el loop principal)
+    # Renderizar solo las opciones válidas
     for opt in data.get('options', []):
         html += render_vertical_option(opt)
     
@@ -244,8 +253,8 @@ def process_response(text, filtered_count=0):
     if filtered_count > 0:
         html += f"""
         <div style="background:#332200; border:1px solid #664400; color:#ffcc00; padding:10px; border-radius:8px; font-size:0.9rem; margin-top:10px;">
-            ⚠️ <b>Nota:</b> Se ocultaron {filtered_count} opción(es) porque excedían demasiado tu presupuesto. 
-            ¿Te gustaría ver opciones más económicas o ajustar el presupuesto?
+            ⚠️ <b>Nota:</b> Se ocultaron {filtered_count} opción(es) porque excedían tu presupuesto. 
+            ¿Deseas ver opciones más económicas?
         </div>
         """
     
@@ -313,7 +322,7 @@ def setup_kiwi_brain():
         return client.caches.create(
             model=MODEL_ID,
             config=types.CreateCachedContentConfig(
-                display_name='kiwigeek_v28_ai_sort_prompt',
+                display_name='kiwigeek_v29_final_fix',
                 system_instruction=sys_prompt,
                 contents=[catalog],
                 ttl='7200s'
@@ -351,7 +360,7 @@ st.markdown("""
     <div style="text-align:center; padding-bottom: 20px;">
         <img src="https://kiwigeekperu.com/wp-content/uploads/2025/06/Diseno-sin-titulo-24.png" height="80">
         <h1 class='neon-title'>AI</h1>
-        <p style='color:#666;'>Ingeniería de Hardware v28.0</p>
+        <p style='color:#666;'>Ingeniería de Hardware v29.0</p>
     </div>
 """, unsafe_allow_html=True)
 
@@ -359,7 +368,6 @@ st.markdown("""
 for msg in st.session_state.messages:
     if msg["role"] == "assistant":
         with st.chat_message(msg["role"], avatar=AVATAR_URL):
-            # Recuperamos metadata si existe
             filtered = msg.get("filtered_count", 0)
             st.markdown(process_response(msg["content"], filtered), unsafe_allow_html=True)
     else:
@@ -380,8 +388,8 @@ if prompt := st.chat_input("Ej: Tengo S/ 3800 para PC Completa..."):
                 response = st.session_state.chat_session.send_message(prompt)
                 raw = response.text
                 
-                # 2. FILTRO Y AUDITORÍA
-                max_retries = 2
+                # 2. FILTRO Y AUDITORÍA (LOOP MEJORADO)
+                max_retries = 3 # Aumentamos intentos de reparación
                 attempt = 0
                 final_json = None
                 filtered_count = 0
@@ -389,40 +397,56 @@ if prompt := st.chat_input("Ej: Tengo S/ 3800 para PC Completa..."):
                 while attempt < max_retries:
                     data = extract_json_from_text(raw)
                     
+                    # ERROR 1: FORMATO INCORRECTO (EL PROBLEMA QUE VISTE)
                     if not data or not isinstance(data, dict): 
-                        final_json = raw # Fallback a texto limpio
-                        break
+                        attempt += 1
+                        print("Error formato. Solicitando corrección a la IA...")
+                        msg = "SYSTEM_ERROR: Your response was not valid JSON. Please return ONLY a valid JSON object. No markdown text outside JSON."
+                        raw = st.session_state.chat_session.send_message(msg).text
+                        continue # Volvemos al inicio del loop a intentar leer el nuevo mensaje
                     
+                    # ERROR 2: NO ES COTIZACIÓN (Es charla)
                     if not data.get("is_quote"):
                         final_json = json.dumps(data)
                         break
                     
+                    # AUDITORÍA DE PRECIOS CON RESPALDO
                     budget = float(data.get("detected_budget", 0))
-                    if budget == 0: 
-                        final_json = json.dumps(data)
-                        break
+                    # Respaldo: Si la IA dice presupuesto 0, buscamos en el texto del usuario
+                    if budget == 0:
+                        nums = re.findall(r'\d+', prompt.replace(',', ''))
+                        if nums: budget = float(max(nums, key=len))
                     
                     valid_options = []
                     filtered_in_this_run = 0
                     
-                    for opt in data.get('options', []):
-                        total = sum(float(c['price']) for c in opt['components'])
-                        limit = budget * 1.10
-                        if total <= limit:
-                            valid_options.append(opt)
+                    # Si detectamos presupuesto, auditamos
+                    if budget > 0:
+                        for opt in data.get('options', []):
+                            total = sum(float(c.get('price', 0)) for c in opt.get('components', []))
+                            limit = budget * 1.15 # Tolerancia del 15%
+                            if total <= limit:
+                                valid_options.append(opt)
+                            else:
+                                filtered_in_this_run += 1
+                        
+                        if len(valid_options) > 0:
+                            data['options'] = valid_options
+                            final_json = json.dumps(data)
+                            filtered_count = filtered_in_this_run
+                            break 
                         else:
-                            filtered_in_this_run += 1
-                    
-                    if len(valid_options) > 0:
-                        data['options'] = valid_options
-                        final_json = json.dumps(data)
-                        filtered_count = filtered_in_this_run
-                        break 
+                            # Todas las opciones eran muy caras -> Pedimos regenerar
+                            attempt += 1
+                            msg = f"AUDIT_FAIL: All options exceeded {budget}. Cheapest was too expensive. REGENERATE CHEAPER BUILD. Downgrade components."
+                            raw = st.session_state.chat_session.send_message(msg).text
+                            continue
                     else:
-                        attempt += 1
-                        msg = f"ERROR: All options exceeded budget S/ {budget}. REGENERATE CHEAPER options."
-                        raw = st.session_state.chat_session.send_message(msg).text
+                        # No hay presupuesto para auditar, pasamos lo que hay
+                        final_json = json.dumps(data)
+                        break
                 
+                # Si después de 3 intentos sigue fallando, mostramos texto limpio sin etiquetas de código
                 if final_json is None: final_json = raw.replace("```json", "").replace("```", "")
                 
                 # 3. Renderizar
