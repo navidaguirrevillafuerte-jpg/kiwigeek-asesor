@@ -70,17 +70,17 @@ def apply_custom_styles():
 
         /* --- ESTILOS DEL INPUT DE CHAT --- */
         .stChatInputContainer {{
-            padding-bottom: 90px !important; /* Subido significativamente */
+            padding-bottom: 130px !important; /* Subido aún más (Antes 90px) */
             padding-top: 10px !important;
             background-color: transparent !important;
         }}
 
         /* Estilizar la caja de texto misma */
         .stChatInput textarea {{
-            background-color: #f0f0f0 !important; /* Fondo gris claro (NO negro) */
+            background-color: #f0f0f0 !important; /* Fondo gris claro */
             border: 2px solid #ccc !important;
-            color: #333 !important; /* Texto gris oscuro (NO negro puro) */
-            caret-color: #333 !important; /* Cursor gris oscuro */
+            color: #333 !important; /* Texto gris oscuro */
+            caret-color: #333 !important;
             border-radius: 12px !important;
         }}
         
@@ -96,9 +96,9 @@ def apply_custom_styles():
             background-color: #ffffff !important;
         }}
         
-        /* Ajustar ancho del contenedor principal (Punto medio) */
+        /* Ajustar ancho del contenedor principal (Centrado y márgenes amplios) */
         .block-container {{
-            max-width: 1000px !important;
+            max-width: 800px !important; /* Reducido a 800px para más margen lateral */
             padding-left: 2rem !important;
             padding-right: 2rem !important;
             margin: auto !important;
