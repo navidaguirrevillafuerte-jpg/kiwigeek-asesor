@@ -1,6 +1,7 @@
 import streamlit as st
 import os
 import json
+import random
 from google import genai
 from google.genai import types
 
@@ -20,6 +21,16 @@ COLORS = {
     "bg_card": "#2d2d2d"
 }
 AVATAR_URL = "https://kiwigeekperu.com/wp-content/uploads/2026/01/gatitow.webp"
+
+# --- LISTA DE AVATARES RANDOM PARA USUARIO ---
+USER_AVATARS = [
+    "🧑‍💻", "👨‍💻", "👩‍💻", "🦸", "🦹", "🧙", "🧚", "🧛", "🧜", "🧝", 
+    "🧞", "🧟", "💆", "💇", "🚶", "🏃", "💃", "🕺", "🕴", "👯", 
+    "🧖", "🧗", "🤺", "🏇", "⛷", "🏂", "🏌️", "🏄", "🚣", "🏊", 
+    "⛹️", "🏋️", "🚴", "🚵", "🤸", "🤼", "🤽", "🤾", "🤹", "🧘", 
+    "🛀", "🛌", "🧑", "🧒", "👦", "👧", "🧑‍🦱", "👨‍🦱", "👩‍🦱", "🧑‍🦰",
+    "😎", "🤓", "🤠", "🥳", "👽", "🤖", "👮", "🕵️", "💂", "👷"
+]
 
 # --- CSS MEJORADO ---
 def apply_custom_styles():
@@ -62,13 +73,11 @@ def apply_custom_styles():
             padding-bottom: 20px !important;
         }}
 
-        /* Botón de reset */
-        .reset-btn {{
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1000;
-        }}
+        /* Ocultar elementos de la interfaz por defecto (Hamburguesa, Header, Footer) */
+        #MainMenu {{visibility: hidden;}}
+        header {{visibility: hidden;}}
+        footer {{visibility: hidden;}}
+        [data-testid="stToolbar"] {{visibility: hidden !important;}}
         </style>
     """, unsafe_allow_html=True)
 
@@ -155,7 +164,13 @@ with st.sidebar:
         st.rerun()
 
 # Header Principal
-st.markdown("<h1 class='neon-title'>KIWIGEEK AI</h1>", unsafe_allow_html=True)
+st.markdown("""
+    <div style="display: flex; justify-content: center; align-items: center; gap: 10px; padding-bottom: 10px;">
+        <img src="https://kiwigeekperu.com/wp-content/uploads/2025/06/Diseno-sin-titulo-24.png" 
+             style="height: 90px; object-fit: contain; filter: drop-shadow(0 0 5px rgba(0, 255, 65, 0.3));">
+        <h1 class='neon-title' style='margin: 0; padding: 0; font-size: 3.5rem !important; display: inline-block;'>AI</h1>
+    </div>
+""", unsafe_allow_html=True)
 st.markdown("<p style='text-align: center; color: #888;'>Ingeniería de hardware de alto nivel</p>", unsafe_allow_html=True)
 
 # Mostrar historial
@@ -164,14 +179,24 @@ for msg in st.session_state.messages:
         with st.chat_message(msg["role"], avatar=AVATAR_URL):
             st.markdown(msg["content"])
     else:
-        with st.chat_message(msg["role"]):
+        # Usar el avatar guardado o uno aleatorio si es un mensaje antiguo
+        user_avatar = msg.get("avatar", random.choice(USER_AVATARS))
+        with st.chat_message(msg["role"], avatar=user_avatar):
             st.markdown(msg["content"])
 
 # Entrada de usuario
 if prompt := st.chat_input("Ej: Tengo S/ 4000 para una PC de Streaming..."):
-    # Añadir mensaje de usuario
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
+    # Seleccionar avatar aleatorio ÚNICO para este mensaje
+    current_user_avatar = random.choice(USER_AVATARS)
+    
+    # Añadir mensaje de usuario con su avatar específico
+    st.session_state.messages.append({
+        "role": "user", 
+        "content": prompt, 
+        "avatar": current_user_avatar
+    })
+    
+    with st.chat_message("user", avatar=current_user_avatar):
         st.markdown(prompt)
 
     # Respuesta de la IA
