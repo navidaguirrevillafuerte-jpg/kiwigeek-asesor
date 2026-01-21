@@ -36,7 +36,7 @@ USER_AVATARS = [
 def apply_custom_styles():
     st.markdown(f"""
         <style>
-        /* Force reload styles v3.2 - Clean Header */
+        /* Force reload styles v3.3 - No Sidebar Arrow */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
         
         * {{ font-family: 'Inter', sans-serif !important; }}
@@ -110,8 +110,24 @@ def apply_custom_styles():
         /* Solo ocultamos el Footer (Made with Streamlit), mostramos el resto */
         footer {{visibility: hidden;}}
         
-        /* Ocultar elementos feos del header: Flecha del sidebar y Botón Deploy */
-        [data-testid="stSidebarCollapsedControl"] {{display: none !important;}}
+        /* --- ELIMINACIÓN AGRESIVA DEL BOTÓN SIDEBAR --- */
+        
+        /* Selector estándar */
+        [data-testid="stSidebarCollapsedControl"] {{
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            width: 0 !important;
+            height: 0 !important;
+            pointer-events: none !important;
+            overflow: hidden !important;
+        }}
+        
+        /* En caso de que Streamlit use un contenedor padre para el botón */
+        section[data-testid="stSidebar"] > div > div:first-child button {{
+            display: none !important;
+        }}
+        
         .stDeployButton {{display: none !important;}}
         
         /* Mantenemos visible el menú de opciones (tres puntos) para borrar caché */
