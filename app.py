@@ -3,7 +3,7 @@ import os
 import json
 import random
 import re
-import ast # Importado para reparaciones de emergencia
+import ast 
 from google import genai
 from google.genai import types
 
@@ -26,7 +26,7 @@ WHATSAPP_LINK = "https://api.whatsapp.com/send/?phone=51939081940&text=Hola%2C+m
 
 USER_AVATARS = ["🧑‍💻", "👨‍💻", "👩‍💻", "🦸", "🦹", "🧙", "🧚", "🧛", "🧜", "🧝"]
 
-# --- CSS LIMPIO Y ORDENADO ---
+# --- CSS LIMPIO Y ORDENADO (TABLAS HTML ROBUSTAS) ---
 def apply_custom_styles():
     st.markdown(f"""
         <style>
@@ -44,78 +44,91 @@ def apply_custom_styles():
             line-height: 1;
         }}
 
-        /* Tarjeta de Opción (Vertical y Limpia) */
+        /* Tarjeta de Opción */
         .quote-container {{
             background-color: #222;
             border: 1px solid #444;
             border-radius: 8px;
             margin-bottom: 25px;
             overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }}
         .quote-header {{
             background-color: {COLORS['kiwi_green']};
             color: #000;
-            padding: 10px 15px;
+            padding: 12px 20px;
             font-weight: 800;
             font-size: 1.1rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border-bottom: 2px solid #000;
         }}
         .quote-strategy {{
-            font-size: 0.8rem; 
-            color: #222; 
-            font-weight: 500;
-        }}
-        
-        /* Tabla de Componentes */
-        .comp-table {{
-            width: 100%;
-            border-collapse: collapse;
-        }}
-        .comp-row {{
-            border-bottom: 1px solid #333;
-            display: flex;
-            padding: 8px 15px;
-            align-items: center;
-        }}
-        .comp-row:last-child {{ border-bottom: none; }}
-        
-        .c-label {{
-            width: 30%;
-            color: #888;
-            font-size: 0.85rem;
+            font-size: 0.85rem; 
+            color: #111; 
             font-weight: 600;
             text-transform: uppercase;
+            opacity: 0.8;
         }}
-        .c-val {{
-            width: 50%;
-            color: #eee;
+        
+        /* TABLA HTML REAL (Alineación perfecta) */
+        .quote-table {{
+            width: 100%;
+            border-collapse: collapse;
             font-size: 0.95rem;
         }}
-        .c-val a {{ color: #fff; text-decoration: none; font-weight:500; }}
-        .c-val a:hover {{ text-decoration: underline; color: {COLORS['kiwi_green']}; }}
+        .quote-table td {{
+            padding: 10px 15px;
+            border-bottom: 1px solid #333;
+            vertical-align: middle;
+            color: #ddd;
+        }}
+        .quote-table tr:last-child td {{ border-bottom: none; }}
         
-        .c-price {{
+        /* Columnas específicas */
+        .col-cat {{
+            width: 25%;
+            color: #888 !important;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }}
+        .col-prod {{
+            width: 55%;
+        }}
+        .col-prod a {{ 
+            color: #fff; 
+            text-decoration: none; 
+            font-weight: 500;
+            display: block;
+            line-height: 1.3;
+        }}
+        .col-prod a:hover {{ text-decoration: underline; color: {COLORS['kiwi_green']}; }}
+        
+        .col-price {{
             width: 20%;
             text-align: right;
-            color: {COLORS['kiwi_green']};
+            color: {COLORS['kiwi_green']} !important;
             font-weight: 700;
-            font-size: 0.95rem;
+            white-space: nowrap;
         }}
         
         .quote-total {{
-            background-color: #111;
-            padding: 12px 15px;
+            background-color: #151515;
+            padding: 15px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             border-top: 1px solid #444;
         }}
+        .t-label {{ color: #aaa; font-weight:600; font-size: 0.9rem; text-transform: uppercase; }}
         .t-num {{
             color: {COLORS['kiwi_green']};
-            font-size: 1.3rem;
+            font-size: 1.4rem;
             font-weight: 900;
+            text-shadow: 0 0 10px rgba(0,255,65,0.2);
         }}
 
         /* Botón WhatsApp */
@@ -131,8 +144,9 @@ def apply_custom_styles():
             text-decoration: none !important;
             margin-top: 20px;
             transition: background 0.3s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
         }}
-        .btn-whatsapp:hover {{ background-color: #1ebc57; }}
+        .btn-whatsapp:hover {{ background-color: #1ebc57; transform: translateY(-1px); }}
         
         /* Ajustes UI */
         .stChatMessage {{ background: transparent !important; }}
@@ -147,36 +161,27 @@ apply_custom_styles()
 if not os.path.exists('catalogo_kiwigeek.json'):
     with open('catalogo_kiwigeek.json', 'w') as f: json.dump({"products": []}, f)
 
-# --- MOTORES DE LÓGICA (EXTRACTOR BLINDADO V32) ---
+# --- MOTORES DE LÓGICA ---
 
 def extract_json_from_text(text):
-    """
-    Intenta reparar y extraer JSON incluso si la IA lo envía mal formado.
-    """
+    """Extrae JSON limpio y repara errores comunes."""
     text_clean = text
     try:
-        # 1. Intentar capturar el bloque JSON más grande posible
-        # Buscamos desde la primera llave abierta hasta la última cerrada
         match = re.search(r'\{.*\}', text, re.DOTALL)
-        if match:
-            text_clean = match.group(0)
+        if match: text_clean = match.group(0)
         
-        # 2. LIMPIEZA QUIRÚRGICA
-        # Eliminar comentarios JS (// ...)
-        text_clean = re.sub(r'//.*?\n', '\n', text_clean)
-        # Corregir comas finales en objetos/listas (Error muy común: {a:1,})
+        # Limpieza V34: CORREGIDO - No romper URLs
+        # Solo eliminamos comentarios si NO están precedidos por ':' (como en http://)
+        text_clean = re.sub(r'(?<!:)\/\/.*?\n', '\n', text_clean)
+        
         text_clean = re.sub(r',\s*\}', '}', text_clean)
         text_clean = re.sub(r',\s*\]', ']', text_clean)
-        # Normalizar booleanos y nulos (Python vs JSON)
         text_clean = text_clean.replace("True", "true").replace("False", "false").replace("None", "null")
         
-        # 3. Intentar parsear como JSON estándar
         return json.loads(text_clean)
     except:
-        # 4. PLAN B: Intentar parsear como estructura de Python (ast)
-        # Esto ayuda si la IA usó comillas simples o True/False
         try:
-            # Revertimos a formato Python para ast.literal_eval
+            # Fallback Python
             text_python = text_clean.replace("true", "True").replace("false", "False").replace("null", "None")
             return ast.literal_eval(text_python)
         except:
@@ -184,38 +189,35 @@ def extract_json_from_text(text):
     return None
 
 def render_vertical_option(option):
-    """Renderiza UNA opción en formato vertical limpio."""
+    """Renderiza UNA opción usando una TABLA HTML REAL."""
     title = option.get('title', 'Opción')
     strategy = option.get('strategy', '')
-    
-    # ORDENAMIENTO: Confianza total en el orden que envía la IA
+    # ORDENAMIENTO: Respetamos 100% el orden que viene de la IA
     components = option.get('components', []) 
     
     total = sum(float(c.get('price', 0)) for c in components)
     
     rows_html = ""
     for c in components:
-        # Normalizar nombres de categoría para mostrar
-        cat_raw = c.get('category', 'Componente').upper()
-        cat_display = cat_raw
-        # Pequeño mapa de visualización para que se vea prolijo
-        if "PROCESADOR" in cat_raw or "CPU" in cat_raw: cat_display = "PROCESADOR"
-        elif "PLACA" in cat_raw: cat_display = "PLACA MADRE"
-        elif "VIDEO" in cat_raw or "GPU" in cat_raw: cat_display = "TARJETA VIDEO"
-        elif "RAM" in cat_raw: cat_display = "MEMORIA RAM"
-        elif "FUENTE" in cat_raw: cat_display = "FUENTE PODER"
-        elif "ALMACENAMIENTO" in cat_raw or "SSD" in cat_raw: cat_display = "ALMACENAMIENTO"
+        cat_display = c.get('category', 'Componente').upper()
+        # Normalizar nombres cortos
+        if "PROCESADOR" in cat_display or "CPU" in cat_display: cat_display = "CPU"
+        elif "PLACA" in cat_display: cat_display = "PLACA"
+        elif "VIDEO" in cat_display or "GPU" in cat_display: cat_display = "GPU"
+        elif "RAM" in cat_display: cat_display = "RAM"
+        elif "FUENTE" in cat_display: cat_display = "FUENTE"
+        elif "ALMACENAMIENTO" in cat_display or "SSD" in cat_display: cat_display = "SSD"
         
         name = c.get('name', 'Producto')
         url = c.get('url', '#')
         price = float(c.get('price', 0))
         
         rows_html += f"""
-        <div class="comp-row">
-            <div class="c-label">{cat_display}</div>
-            <div class="c-val"><a href="{url}" target="_blank">{name}</a></div>
-            <div class="c-price">S/ {price:,.0f}</div>
-        </div>
+        <tr>
+            <td class="col-cat">{cat_display}</td>
+            <td class="col-prod"><a href="{url}" target="_blank">{name}</a></td>
+            <td class="col-price">S/ {price:,.0f}</td>
+        </tr>
         """
         
     return f"""
@@ -224,11 +226,11 @@ def render_vertical_option(option):
             <span>{title}</span>
             <span class="quote-strategy">{strategy}</span>
         </div>
-        <div class="comp-table">
+        <table class="quote-table">
             {rows_html}
-        </div>
+        </table>
         <div class="quote-total">
-            <span style="color:#aaa; font-weight:600;">TOTAL CONTADO</span>
+            <span class="t-label">Total Contado</span>
             <span class="t-num">S/ {total:,.2f}</span>
         </div>
     </div>
@@ -238,29 +240,22 @@ def process_response(text, filtered_count=0):
     """Renderiza la respuesta final."""
     data = extract_json_from_text(text)
     
-    # Si sigue sin ser válido, mostramos mensaje de error en lugar de texto crudo
     if not data or not isinstance(data, dict): 
-        return """
-        <div style="background:#330000; color:#ffcccc; padding:15px; border-radius:8px;">
-            ⚠️ <b>Error de Formato:</b> La IA generó una respuesta que no se pudo procesar visualmente.
-            Por favor, intenta preguntar de nuevo.
-        </div>
-        """
+        # Fallback de emergencia a texto plano si falla todo
+        clean_text = text.replace("```json", "").replace("```", "")
+        return clean_text
         
     if not data.get("is_quote"): return data.get("message", text)
     
     html = f"<div style='margin-bottom:20px; color:#ddd;'>{data.get('intro','')}</div>"
     
-    # Renderizar opciones
     for opt in data.get('options', []):
         html += render_vertical_option(opt)
     
-    # Mensaje de filtrado
     if filtered_count > 0:
         html += f"""
         <div style="background:#332200; border:1px solid #664400; color:#ffcc00; padding:10px; border-radius:8px; font-size:0.9rem; margin-top:10px;">
             ⚠️ <b>Nota:</b> Se ocultaron {filtered_count} opción(es) porque excedían tu presupuesto. 
-            ¿Deseas ver opciones más económicas?
         </div>
         """
     
@@ -335,7 +330,7 @@ def setup_kiwi_brain():
         return client.caches.create(
             model=MODEL_ID,
             config=types.CreateCachedContentConfig(
-                display_name='kiwigeek_v32_bulletproof_json',
+                display_name='kiwigeek_v34_final_urls',
                 system_instruction=sys_prompt,
                 contents=[catalog],
                 ttl='7200s'
@@ -373,7 +368,7 @@ st.markdown("""
     <div style="text-align:center; padding-bottom: 20px;">
         <img src="https://kiwigeekperu.com/wp-content/uploads/2025/06/Diseno-sin-titulo-24.png" height="80">
         <h1 class='neon-title'>AI</h1>
-        <p style='color:#666;'>Ingeniería de Hardware v32.0</p>
+        <p style='color:#666;'>Ingeniería de Hardware v34.0</p>
     </div>
 """, unsafe_allow_html=True)
 
@@ -396,12 +391,11 @@ if prompt := st.chat_input("Ej: Tengo S/ 3800 para PC Completa..."):
         placeholder = st.empty()
         with st.spinner("🤖 Analizando y auditando opciones..."):
             try:
-                # 1. Generación
                 if "chat_session" not in st.session_state: raise Exception("Reload")
                 response = st.session_state.chat_session.send_message(prompt)
                 raw = response.text
                 
-                # 2. FILTRO Y AUDITORÍA (LOOP DE CORRECCIÓN)
+                # 2. FILTRO Y AUDITORÍA
                 max_retries = 3 
                 attempt = 0
                 final_json = None
@@ -412,7 +406,6 @@ if prompt := st.chat_input("Ej: Tengo S/ 3800 para PC Completa..."):
                     
                     if not data or not isinstance(data, dict): 
                         attempt += 1
-                        print("Error formato JSON. Reintentando...")
                         msg = "ERROR: JSON INVALID. Return ONLY valid JSON. Check brackets and commas."
                         raw = st.session_state.chat_session.send_message(msg).text
                         continue 
@@ -422,7 +415,6 @@ if prompt := st.chat_input("Ej: Tengo S/ 3800 para PC Completa..."):
                         break
                     
                     budget = float(data.get("detected_budget", 0))
-                    # Respaldo de presupuesto
                     if budget == 0:
                         nums = re.findall(r'\d+', prompt.replace(',', ''))
                         if nums: budget = float(max(nums, key=len))
@@ -453,11 +445,8 @@ if prompt := st.chat_input("Ej: Tengo S/ 3800 para PC Completa..."):
                         final_json = json.dumps(data)
                         break
                 
-                # Si falló todo, mostramos mensaje de error
-                if final_json is None: 
-                    final_json = raw # Guardamos lo que haya para debug, pero el render mostrará error
+                if final_json is None: final_json = raw.replace("```json", "").replace("```", "")
                 
-                # 3. Renderizar
                 final_html = process_response(final_json, filtered_count)
                 placeholder.markdown(final_html, unsafe_allow_html=True)
                 
@@ -470,4 +459,3 @@ if prompt := st.chat_input("Ej: Tengo S/ 3800 para PC Completa..."):
             except Exception as e:
                 st.error(f"Error crítico: {str(e)}")
                 if "chat_session" in st.session_state: del st.session_state["chat_session"]
-                # st.rerun()
