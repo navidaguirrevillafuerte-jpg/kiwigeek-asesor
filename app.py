@@ -7,7 +7,7 @@ from google.genai import types
 
 # --- CONFIGURACIÓN DE LA PÁGINA ---
 st.set_page_config(
-    page_title="Kiwigeek AI - Cotizador Simple",
+    page_title="Kiwigeek AI - Cotizador de Hardware",
     page_icon="https://kiwigeekperu.com/wp-content/uploads/2025/06/Diseno-sin-titulo-24.png",
     layout="centered",
     initial_sidebar_state="expanded"
@@ -54,7 +54,6 @@ def apply_custom_styles():
         }
         .promo-btn:hover { background-color: #128C7E; }
         
-        /* Ocultar elementos innecesarios */
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
         </style>
@@ -75,12 +74,12 @@ if not api_key:
 client = genai.Client(api_key=api_key)
 MODEL_ID = 'models/gemini-2.0-flash'
 
-# Esquema para la respuesta estructurada
 RESPONSE_SCHEMA = {
     "type": "OBJECT",
     "properties": {
+        "needs_info": {"type": "BOOLEAN"},
         "is_quote": {"type": "BOOLEAN"},
-        "greeting": {"type": "STRING"},
+        "message": {"type": "STRING"},
         "quotes": {
             "type": "ARRAY",
             "items": {
@@ -114,21 +113,22 @@ def setup_kiwi_brain():
             with open('catalogo_kiwigeek.json', 'r', encoding='utf-8') as f:
                 catalog = f.read()
             
-        sys_prompt = """ROL: Eres 'Kiwigeek AI', Ingeniero de Hardware Senior.
-OBJETIVO: Generar 3 opciones de PC optimizadas.
+        sys_prompt = """ROL: Eres 'Kiwigeek AI', experto Ingeniero de Hardware y Cotizador Especializado.
 
-REGLAS DE INGENIERÍA (CRÍTICO):
-1. COMPATIBILIDAD: Verifica que el Socket del CPU coincida con la Placa, que la RAM sea compatible (DDR4/DDR5) y que la Fuente (PSU) tenga los Watts suficientes.
-2. OPTIMIZACIÓN: Evita cuellos de botella (bottlenecks). No pongas componentes que no tengan sentido juntos.
-3. PRESUPUESTO: Las 3 opciones deben estar dentro del rango (+15% máx).
-4. ESTRUCTURA: Devuelve la respuesta en formato JSON puro.
+REGLAS DE INTERACCIÓN:
+1. ANTES DE COTIZAR: Si el usuario no ha especificado si quiere "Solo Torre" o "PC Completa" (monitor, teclado, etc.), NO generes la cotización en JSON. Responde pidiendo esa aclaración de forma amable. Marca 'needs_info' como true.
 
-No calcules el total. Python lo hará. Asegúrate de que cada componente tenga su precio individual real."""
+REGLAS DE INGENIERÍA (EXTREMA IMPORTANCIA):
+2. COMPATIBILIDAD Y CUELLO DE BOTELLA: Es inaceptable poner un CPU débil con una GPU potente o viceversa. Equilibra el rendimiento. No pongas un Ryzen 5 5500 con una RX 7700 XT.
+3. PRESUPUESTO ESTRICTO: NUNCA excedas el presupuesto por más del 10%. Es preferible bajar la gama de un componente a pasarse del precio.
+4. CALIDAD: Si el presupuesto es muy ajustado, advierte al usuario.
+
+ESTRUCTURA: Devuelve la respuesta en JSON. No calcules el total."""
         
         return client.caches.create(
             model=MODEL_ID,
             config=types.CreateCachedContentConfig(
-                display_name='kiwi_v4_stable',
+                display_name='kiwi_v5_expert_quoter',
                 system_instruction=sys_prompt,
                 contents=[catalog] if catalog else [],
                 ttl='7200s'
@@ -138,7 +138,6 @@ No calcules el total. Python lo hará. Asegúrate de que cada componente tenga s
         return None, str(e)
 
 def initialize_session(force=False):
-    """Inicia o reinicia la sesión de chat de forma segura."""
     if "messages" not in st.session_state: 
         st.session_state.messages = []
     
@@ -155,28 +154,34 @@ def initialize_session(force=False):
         if not st.session_state.messages:
             st.session_state.messages.append({
                 "role": "assistant", 
-                "content": "Hola. Soy Kiwigeek AI. ¿Qué presupuesto tienes para tu nueva PC o qué componentes buscas?"
+                "content": "¡Hola! Soy **Kiwigeek AI**, experto en ingeniería de hardware. Para darte la mejor cotización, indícame tu presupuesto y si buscas **Solo Torre** o **PC Completa**."
             })
 
-# Asegurar que la sesión esté lista
 initialize_session()
 
 # --- SIDEBAR ---
 with st.sidebar:
     st.image('https://kiwigeekperu.com/wp-content/uploads/2025/06/Diseno-sin-titulo-24.png', use_container_width=True)
     st.markdown("""
-    <div class="info-box"><div class="info-title-yes">✅ Lo que SÍ hago</div>
-    <ul class="info-list"><li>Cotizo PCs compatibles.</li><li>Evito cuellos de botella.</li><li>Precios actualizados.</li></ul></div>
+    <div class="info-box"><div class="info-title-yes">✅ Cotizador Especializado</div>
+    <ul class="info-list">
+        <li>Cálculo exacto de hardware.</li>
+        <li>Análisis de Cuello de Botella.</li>
+        <li>Presupuesto real (máx +10%).</li>
+    </ul></div>
     """, unsafe_allow_html=True)
     st.markdown(f"""
     <div class="info-box" style="border: 1px solid #ffd700; background: #fffdf0;">
     <div class="info-title-promo">🎁 ¡Promoción Especial!</div>
-    <p style="font-size: 0.85rem;">Compra <b>CPU + Placa + RAM + GPU</b> y obtén un descuento exclusivo.</p>
+    <p style="font-size: 0.85rem;">Compra tu combo <b>CPU + Placa + RAM + GPU</b> y obtén un descuento exclusivo.</p>
     <a href="{WHATSAPP_LINK}" target="_blank" class="promo-btn">📲 Reclamar Descuento</a></div>
     """, unsafe_allow_html=True)
     st.markdown("""
     <div class="info-box"><div class="info-title-no">🚫 Lo que NO hago</div>
-    <ul class="info-list"><li>No hago reparaciones físicas.</li><li>No aceptamos partes en pago.</li></ul></div>
+    <ul class="info-list">
+        <li>No soy buscador de ofertas.</li>
+        <li>No vendo software pirata.</li>
+    </ul></div>
     """, unsafe_allow_html=True)
     if st.button("🗑️ Reiniciar Chat", use_container_width=True):
         st.session_state.messages = []
@@ -191,36 +196,32 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# --- DISPLAY CHAT ---
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"], avatar=AVATAR_URL if msg["role"] == "assistant" else "👤"):
         st.markdown(msg["content"])
 
-# --- CHAT LOGIC ---
-if prompt := st.chat_input("Dime tu presupuesto o consulta de hardware..."):
+if prompt := st.chat_input("Dime tu presupuesto (ej: S/ 4000) y tipo de PC..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user", avatar="👤"): 
-        st.markdown(prompt)
+    with st.chat_message("user", avatar="👤"): st.markdown(prompt)
 
     with st.chat_message("assistant", avatar=AVATAR_URL):
-        with st.spinner("Analizando hardware y compatibilidad..."):
+        with st.spinner("Realizando ingeniería de hardware..."):
             try:
-                # Intento enviar mensaje. Si la sesión expiró, lanzará error y reintentaremos.
                 response = st.session_state.chat_session.send_message(prompt)
                 data = json.loads(response.text)
                 
                 final_text = ""
-                if data.get("greeting"):
-                    final_text += data["greeting"] + "\n\n"
                 
-                if data.get("is_quote") and data.get("quotes"):
-                    final_text += "He preparado estas 3 opciones optimizadas para ti:\n\n---\n"
+                if data.get("needs_info"):
+                    final_text = data.get("message", "Por favor, confírmame si deseas Solo Torre o PC Completa para proceder.")
+                
+                elif data.get("is_quote") and data.get("quotes"):
+                    final_text = data.get("message", "Aquí tienes 3 opciones equilibradas y compatibles:") + "\n\n---\n"
                     for q in data["quotes"]:
-                        # Suma segura de precios manejando posibles nulos o errores
                         total = sum(float(item.get("price", 0)) for item in q.get("components", []))
                         
-                        final_text += f"### {q.get('title', 'Opción de PC')}\n"
-                        final_text += f"**Estrategia:** {q.get('strategy', 'Equilibrio de componentes')}\n\n"
+                        final_text += f"### {q.get('title', 'Cotización')}\n"
+                        final_text += f"**Estrategia:** {q.get('strategy', '')}\n\n"
                         
                         for item in q.get("components", []):
                             name = item.get("name", "Componente")
@@ -234,19 +235,15 @@ if prompt := st.chat_input("Dime tu presupuesto o consulta de hardware..."):
                         
                         final_text += f"\n**TOTAL CALCULADO: S/ {total:,.2f}**\n\n---\n"
                 
-                if not final_text: 
-                    final_text = "He procesado tu solicitud. ¿Tienes alguna otra duda sobre estos componentes?"
+                else:
+                    final_text = data.get("message", "Entendido. ¿Tienes alguna otra duda?")
                 
                 st.markdown(final_text)
                 st.session_state.messages.append({"role": "assistant", "content": final_text})
                 
             except Exception as e:
-                # Si falló, intentamos una vez más reiniciando la sesión silenciosamente
                 try:
                     initialize_session(force=True)
-                    response = st.session_state.chat_session.send_message(prompt)
-                    data = json.loads(response.text)
-                    # (Repetir lógica de renderizado simplificada para el reintento)
-                    st.markdown("Se ha restablecido la conexión. Por favor, vuelve a enviar tu presupuesto para procesarlo con precisión.")
+                    st.warning("Se ha restablecido la conexión. Por favor, repite tu solicitud.")
                 except:
-                    st.error("La conexión se ha interrumpido. Por favor, pulsa 'Reiniciar Chat' en el panel lateral.")
+                    st.error("Error de conexión. Usa el botón 'Reiniciar Chat'.")
