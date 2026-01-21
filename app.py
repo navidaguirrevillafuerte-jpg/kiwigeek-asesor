@@ -164,7 +164,7 @@ MODEL_ID = 'models/gemini-2.0-flash'
 
 @st.cache_resource
 def setup_kiwi_brain():
-    """Inicializa el contenido cacheado con la Lógica V15 Mejorada"""
+    """Inicializa el contenido con FALLBACK INTELIGENTE (Prioriza Caché, pero no muere sin él)"""
     try:
         path = 'catalogo_kiwigeek.json'
         if not os.path.exists(path):
@@ -173,7 +173,6 @@ def setup_kiwi_brain():
         with open(path, 'r', encoding='utf-8') as f:
             catalog_data = f.read()
 
-        # --- LÓGICA V15: CEREBRO AVANZADO DE VENTAS ---
         system_instruction = (
             "ROL: Eres 'Kiwigeek AI', Ingeniero y Vendedor Experto. Tu misión es EDUCAR y VENDER.\n"
             "CONTEXTO: Tienes un inventario con LINKS. Úsalos siempre.\n\n"
@@ -210,6 +209,7 @@ def setup_kiwi_brain():
         )
 
         try:
+            # Intentamos crear el caché
             cache = client.caches.create(
                 model=MODEL_ID,
                 config=types.CreateCachedContentConfig(
@@ -219,39 +219,50 @@ def setup_kiwi_brain():
                     ttl='7200s',
                 )
             )
-            return cache.name, None
+            return cache.name, None # Éxito: (nombre_cache, sin_error)
             
         except Exception as e:
-            print(f"Advertencia Caché: {e}. Usando modo estándar.")
+            # FALLBACK: Si falla, usamos el modo estándar
+            # Esto permitirá que la app funcione aunque sea en modo gratuito/sin caché
             fallback_instruction = f"{system_instruction}\n\nCATÁLOGO DE PRODUCTOS:\n{catalog_data}"
-            return None, fallback_instruction
+            return None, fallback_instruction 
 
     except Exception as e:
-        return None, f"Error crítico: {str(e)}"
+        return None, f"Error crítico de archivo: {str(e)}"
 
 # --- INICIALIZACIÓN DE SESIÓN ---
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
+# Variable de estado para controlar el indicador de caché
+if "is_cached_active" not in st.session_state:
+    st.session_state.is_cached_active = False
+
 if "chat_session" not in st.session_state:
     cache_name, fallback_instruction = setup_kiwi_brain()
     
-    if fallback_instruction and fallback_instruction.startswith("Error:"):
-         st.error(f"⚠️ {fallback_instruction}")
+    # Si hay un error crítico (de archivo), detenemos.
+    if fallback_instruction and fallback_instruction.startswith("Error crítico"):
+         st.error(f"⛔ {fallback_instruction}")
          st.stop()
 
     try:
         if cache_name:
+            # MODO 1: CACHÉ (Barato / Optimizado)
+            st.session_state.is_cached_active = True
             st.session_state.chat_session = client.chats.create(
                 model=MODEL_ID,
                 config=types.GenerateContentConfig(
                     cached_content=cache_name,
-                    temperature=0.15, # Ajustado a V15 (más preciso)
-                    top_p=0.85,       # Ajustado a V15
-                    max_output_tokens=8192 # Permitir respuestas largas
+                    temperature=0.15, 
+                    top_p=0.85,       
+                    max_output_tokens=8192 
                 )
             )
         else:
+            # MODO 2: ESTÁNDAR (Gratis pero consume límites, o Pago por uso alto)
+            # Usamos este si el caché falla por permisos
+            st.session_state.is_cached_active = False
             st.session_state.chat_session = client.chats.create(
                 model=MODEL_ID,
                 config=types.GenerateContentConfig(
@@ -275,6 +286,13 @@ if "chat_session" not in st.session_state:
 # --- INTERFAZ ---
 with st.sidebar:
     st.image('https://kiwigeekperu.com/wp-content/uploads/2025/06/Diseno-sin-titulo-24.png')
+    
+    # --- INDICADOR DE ESTADO INTELIGENTE ---
+    if st.session_state.is_cached_active:
+        st.success("⚡ **Caché Activo**\n\nSistema optimizado para bajo costo.")
+    else:
+        st.warning("⚠️ **Modo Estándar**\n\nEl caché falló (posiblemente cuenta gratuita). Funcionando en modo compatibilidad.")
+
     st.markdown("---")
     
     if st.button("🗑️ Limpiar Conversación", use_container_width=True):
