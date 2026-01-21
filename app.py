@@ -187,22 +187,15 @@ def render_vertical_option(option):
     title = option.get('title', 'Opción')
     strategy = option.get('strategy', '')
     
-    # ORDENAMIENTO POR IA (Python respeta el orden del JSON)
+    # ORDENAMIENTO: PYTHON NO TOCA NADA. Se usa el orden directo de la IA.
     components = option.get('components', []) 
     
     total = sum(float(c.get('price', 0)) for c in components)
     
     rows_html = ""
     for c in components:
-        # Normalizar nombres de categoría para mostrar
-        cat_raw = c.get('category', 'Componente').upper()
-        cat_display = cat_raw
-        if "PROCESADOR" in cat_raw or "CPU" in cat_raw: cat_display = "PROCESADOR"
-        elif "PLACA" in cat_raw: cat_display = "PLACA MADRE"
-        elif "VIDEO" in cat_raw or "GPU" in cat_raw: cat_display = "TARJETA VIDEO"
-        elif "RAM" in cat_raw: cat_display = "MEMORIA RAM"
-        elif "FUENTE" in cat_raw: cat_display = "FUENTE PODER"
-        elif "ALMACENAMIENTO" in cat_raw or "SSD" in cat_raw: cat_display = "ALMACENAMIENTO"
+        # Usamos la categoría tal cual viene del JSON
+        cat_display = c.get('category', 'Componente').upper()
         
         name = c.get('name', 'Producto')
         url = c.get('url', '#')
@@ -305,8 +298,8 @@ def setup_kiwi_brain():
             "    {\n"
             "      \"title\": \"Opción A\", \"strategy\": \"...\",\n"
             "      \"components\": [\n"
-            "         {\"category\": \"CPU\", \"name\": \"...\", \"price\": 0, \"url\": \"...\"},\n"
-            "         {\"category\": \"PLACA\", \"name\": \"...\", \"price\": 0, \"url\": \"...\"}\n"
+            "         {\"category\": \"PROCESADOR\", \"name\": \"...\", \"price\": 0, \"url\": \"...\"},\n"
+            "         {\"category\": \"PLACA MADRE\", \"name\": \"...\", \"price\": 0, \"url\": \"...\"}\n"
             "      ]\n"
             "    }\n"
             "  ],\n"
@@ -316,13 +309,15 @@ def setup_kiwi_brain():
             "REGLAS:\n"
             "1. NO sumes totales. Solo precios unitarios.\n"
             "2. Incluye TODOS los componentes necesarios.\n"
-            "3. ORDENA OBLIGATORIAMENTE la lista 'components' así: PROCESADOR -> PLACA -> RAM -> GPU -> SSD -> FUENTE -> CASE -> (MONITOR/PERIFÉRICOS).\n"
+            "3. ORDEN OBLIGATORIO DE 'components' (¡CRÍTICO!): \n"
+            "   [PROCESADOR, PLACA MADRE, RAM, GPU, SSD, FUENTE, CASE, (MONITOR/PERIFÉRICOS)].\n"
+            "   TÚ ERES RESPONSABLE DEL ORDEN VISUAL.\n"
         )
         
         return client.caches.create(
             model=MODEL_ID,
             config=types.CreateCachedContentConfig(
-                display_name='kiwigeek_v29_final_fix',
+                display_name='kiwigeek_v30_python_hands_off',
                 system_instruction=sys_prompt,
                 contents=[catalog],
                 ttl='7200s'
@@ -360,7 +355,7 @@ st.markdown("""
     <div style="text-align:center; padding-bottom: 20px;">
         <img src="https://kiwigeekperu.com/wp-content/uploads/2025/06/Diseno-sin-titulo-24.png" height="80">
         <h1 class='neon-title'>AI</h1>
-        <p style='color:#666;'>Ingeniería de Hardware v29.0</p>
+        <p style='color:#666;'>Ingeniería de Hardware v30.0</p>
     </div>
 """, unsafe_allow_html=True)
 
