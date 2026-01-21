@@ -9,7 +9,7 @@ st.set_page_config(
     page_title="Kiwigeek AI - Cotizador Simple",
     page_icon="https://kiwigeekperu.com/wp-content/uploads/2025/06/Diseno-sin-titulo-24.png",
     layout="centered",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="expanded"  # Sidebar abierto por defecto para ver las indicaciones
 )
 
 # --- CONSTANTES ---
@@ -27,52 +27,68 @@ def apply_custom_styles():
             font-family: 'Inter', sans-serif !important; 
         }
         
-        /* --- ESTILO NEÓN PARA EL HEADER (Recuperado) --- */
+        /* --- ESTILO NEÓN PARA EL HEADER (Aumentado) --- */
         .neon-title {
             color: #00FF41 !important;
-            text-shadow: 0 0 20px rgba(0,255,65,0.5);
+            text-shadow: 0 0 30px rgba(0,255,65,0.6);
             text-align: center;
             font-weight: 900 !important;
-            font-size: 3.5rem !important;
+            font-size: 6rem !important; /* AUMENTADO DE 3.5rem a 6rem */
             margin: 0;
-            line-height: 1.2;
+            line-height: 1;
         }
 
         /* --- ESTILO LIMPIO PARA EL CHAT --- */
-        
-        /* Ajustes para que el chat se vea limpio */
         .stChatMessage { 
             background: transparent !important; 
             border: none !important;
         }
 
-        /* Eliminar estilos extraños de Markdown */
         .stMarkdown h3 {
             margin-top: 20px;
             font-size: 1.2rem;
             font-weight: bold;
-            color: #000 !important; /* Títulos del chat en negro */
+            color: #000 !important; 
         }
         
-        /* Links simples y subrayados */
         .stMarkdown a {
-            color: #0066cc !important; /* Azul estándar de link */
+            color: #0066cc !important;
             text-decoration: underline;
         }
 
-        /* Listas simples sin cajas */
         .stMarkdown li {
             background: transparent !important;
             padding: 5px 0 !important;
             margin: 0 !important;
             border: none !important;
             list-style-type: disc !important;
-            color: #000 !important; /* Texto de lista en negro */
+            color: #000 !important;
         }
         
-        /* Texto normal en negro */
         .stMarkdown p {
             color: #000 !important;
+        }
+
+        /* --- ESTILO PARA EL SIDEBAR (Indicaciones) --- */
+        [data-testid="stSidebar"] {
+            background-color: #f8f9fa; /* Fondo ligero para diferenciar */
+        }
+        .limitation-box {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .limitation-title {
+            color: #d9534f;
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
         </style>
     """, unsafe_allow_html=True)
@@ -163,7 +179,7 @@ if "chat_session" not in st.session_state:
         st.stop()
     
     config = types.GenerateContentConfig(
-        temperature=0.1, # Temperatura baja para ser más "robot" y directo
+        temperature=0.1, 
         top_p=0.80, 
         max_output_tokens=8192
     )
@@ -179,23 +195,39 @@ if "chat_session" not in st.session_state:
             "content": "Hola. Dime qué necesitas cotizar y te daré los precios y links."
         })
 
-# --- UI ---
+# --- UI (SIDEBAR MODIFICADO) ---
 with st.sidebar:
-    st.image('https://kiwigeekperu.com/wp-content/uploads/2025/06/Diseno-sin-titulo-24.png')
+    st.image('https://kiwigeekperu.com/wp-content/uploads/2025/06/Diseno-sin-titulo-24.png', use_container_width=True)
+    
+    # Panel de Indicaciones / Limitaciones
+    st.markdown("""
+    <div class="limitation-box">
+        <div class="limitation-title">🚫 Lo que NO hago</div>
+        <ul style="padding-left: 20px; color: #333; font-size: 0.9rem;">
+            <li><b>No doy soporte técnico</b> ni reparaciones.</li>
+            <li><b>No vendo Laptops</b> (Solo PCs de escritorio).</li>
+            <li><b>No acepto trade-ins</b> (partes en forma de pago).</li>
+            <li><b>No doy crédito</b> directo.</li>
+        </ul>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.write("---")
+    
     if st.button("🗑️ Reiniciar Chat", use_container_width=True):
         st.session_state.messages = []
         if "chat_session" in st.session_state:
             del st.session_state["chat_session"]
         st.rerun()
 
-# HEADER CON LOGO Y NEON AI (Actualizado: Lado a Lado)
+# HEADER AUMENTADO (Logo y Texto Grandes)
 st.markdown("""
-    <div style="display: flex; align-items: center; justify-content: center; gap: 15px; padding-bottom: 10px;">
-        <img src="https://kiwigeekperu.com/wp-content/uploads/2025/06/Diseno-sin-titulo-24.png" height="80">
+    <div style="display: flex; align-items: center; justify-content: center; gap: 20px; padding-bottom: 20px; padding-top: 10px;">
+        <img src="https://kiwigeekperu.com/wp-content/uploads/2025/06/Diseno-sin-titulo-24.png" height="120">
         <h1 class='neon-title'>AI</h1>
     </div>
     <div style="text-align:center; padding-bottom: 20px;">
-        <p style='color:#666; font-size:0.9rem; margin: 0;'>Cotizador Simple</p>
+        <p style='color:#666; font-size:1rem; margin: 0;'>Cotizador Simple & Directo</p>
     </div>
 """, unsafe_allow_html=True)
 
