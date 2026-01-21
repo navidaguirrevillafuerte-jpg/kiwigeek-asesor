@@ -7,7 +7,7 @@ from google.genai import types
 st.set_page_config(
     page_title="Kiwigeek AI",
     page_icon="🥝",
-    layout="centered"
+    layout="wide"
 )
 
 # --- CSS PERSONALIZADO CON COLORES DE MARCA ---
@@ -25,6 +25,22 @@ st.markdown("""
     /* Fondo principal */
     .stApp {
         background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    }
+    
+    /* Contenedor principal más ancho */
+    .main .block-container {
+        max-width: 1200px;
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+        padding-left: 5rem;
+        padding-right: 5rem;
+    }
+    
+    @media (max-width: 768px) {
+        .main .block-container {
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
     }
     
     /* Título principal con efecto neón */
@@ -184,11 +200,11 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- HEADER CON LOGO ---
-st.markdown("<div style='text-align: center; padding: 20px 0 10px 0;'>", unsafe_allow_html=True)
+st.markdown("<div style='text-align: center; padding: 30px 0 20px 0;'>", unsafe_allow_html=True)
 st.markdown("""
     <img src='https://kiwigeekperu.com/wp-content/uploads/2025/06/Diseno-sin-titulo-24.png' 
          alt='Kiwigeek Logo'
-         style='max-width: 320px; width: 100%; filter: drop-shadow(0 0 25px rgba(0, 255, 65, 0.4));'>
+         style='max-width: 380px; width: 100%; filter: drop-shadow(0 0 30px rgba(0, 255, 65, 0.5));'>
 """, unsafe_allow_html=True)
 st.markdown("</div>", unsafe_allow_html=True)
 
@@ -196,10 +212,43 @@ st.markdown("</div>", unsafe_allow_html=True)
 st.markdown("""
     <h1 style='margin-top: 0; padding-top: 0;'>
         <img src='https://kiwigeekperu.com/wp-content/uploads/2026/01/gatitow.webp' 
-             style='width: 50px; vertical-align: middle; margin-right: 10px;'>
+             style='width: 55px; vertical-align: middle; margin-right: 12px;'>
         Kiwigeek AI
     </h1>
 """, unsafe_allow_html=True)
+
+# Tres columnas para stats minimalistas
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    st.markdown("""
+        <div style='text-align: center; padding: 20px; background: #2d2d2d; border-radius: 15px; border: 1px solid #00FF4133;'>
+            <div style='font-size: 2.5em; color: #00FF41;'>⚡</div>
+            <div style='color: #e0e0e0; font-weight: 600; margin-top: 8px;'>Cotizaciones</div>
+            <div style='color: #00FF41; font-weight: 700; font-size: 1.2em;'>Instantáneas</div>
+        </div>
+    """, unsafe_allow_html=True)
+
+with col2:
+    st.markdown("""
+        <div style='text-align: center; padding: 20px; background: #2d2d2d; border-radius: 15px; border: 1px solid #0066FF33;'>
+            <div style='font-size: 2.5em; color: #0066FF;'>🎯</div>
+            <div style='color: #e0e0e0; font-weight: 600; margin-top: 8px;'>Recomendaciones</div>
+            <div style='color: #0066FF; font-weight: 700; font-size: 1.2em;'>Personalizadas</div>
+        </div>
+    """, unsafe_allow_html=True)
+
+with col3:
+    st.markdown("""
+        <div style='text-align: center; padding: 20px; background: #2d2d2d; border-radius: 15px; border: 1px solid #00FF4133;'>
+            <div style='font-size: 2.5em; color: #00FF41;'>💰</div>
+            <div style='color: #e0e0e0; font-weight: 600; margin-top: 8px;'>Presupuestos</div>
+            <div style='color: #00FF41; font-weight: 700; font-size: 1.2em;'>Ajustables</div>
+        </div>
+    """, unsafe_allow_html=True)
+
+st.markdown("<br>", unsafe_allow_html=True)
+
 st.markdown("### 🎯 Tu Ingeniero de Hardware Personal")
 st.info("💡 **Ejemplo:** *'Armame una PC tengo 4000 soles'* o *'Quiero una PC gamer para jugar Valorant'*")
 
@@ -289,7 +338,11 @@ if "chat" not in st.session_state:
         st.stop()
 
 # --- SEPARADOR VISUAL ---
-st.markdown("---")
+st.markdown("""
+    <div style='margin: 30px 0;'>
+        <div style='height: 2px; background: linear-gradient(90deg, transparent, #00FF41, #0066FF, transparent);'></div>
+    </div>
+""", unsafe_allow_html=True)
 
 # --- MOSTRAR MENSAJES ANTERIORES ---
 for message in st.session_state.messages:
@@ -314,12 +367,20 @@ if prompt := st.chat_input("¿Qué PC estás buscando hoy? 💻"):
                 st.error(f"Ocurrió un error: {e}")
 
 # --- FOOTER ---
-st.markdown("---")
-st.markdown(
-    "<p style='text-align: center; color: #4a4a4a; font-size: 0.9em;'>"
-    "<img src='https://kiwigeekperu.com/wp-content/uploads/2026/01/gatitow.webp' style='width: 24px; vertical-align: middle; margin-right: 8px;'>"
-    "<strong style='color: #00FF41;'>Kiwigeek</strong> - Equipamos tu poder | "
-    "<span style='color: #0066FF;'>Hecho con 💚 en Perú</span>"
-    "</p>",
-    unsafe_allow_html=True
-)
+st.markdown("""
+    <div style='margin: 40px 0 20px 0;'>
+        <div style='height: 2px; background: linear-gradient(90deg, transparent, #00FF41, #0066FF, transparent);'></div>
+    </div>
+""", unsafe_allow_html=True)
+
+col_footer1, col_footer2, col_footer3 = st.columns([1, 2, 1])
+
+with col_footer2:
+    st.markdown(
+        "<p style='text-align: center; color: #4a4a4a; font-size: 1em;'>"
+        "<img src='https://kiwigeekperu.com/wp-content/uploads/2026/01/gatitow.webp' style='width: 28px; vertical-align: middle; margin-right: 10px;'>"
+        "<strong style='color: #00FF41; font-size: 1.1em;'>Kiwigeek</strong> - Equipamos tu poder | "
+        "<span style='color: #0066FF;'>Hecho con 💚 en Perú</span>"
+        "</p>",
+        unsafe_allow_html=True
+    )
