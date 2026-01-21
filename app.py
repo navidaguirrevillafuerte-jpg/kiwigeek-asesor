@@ -21,6 +21,7 @@ COLORS = {
     "bg_card": "#2d2d2d"
 }
 AVATAR_URL = "https://kiwigeekperu.com/wp-content/uploads/2026/01/gatitow.webp"
+WHATSAPP_LINK = "https://api.whatsapp.com/send/?phone=51939081940&text=Hola%2C+me+gustar%C3%ADa+saber+m%C3%A1s+de+sus+productos&type=phone_number&app_absent=0"
 
 # --- LISTA DE AVATARES RANDOM PARA USUARIO ---
 USER_AVATARS = [
@@ -164,7 +165,7 @@ MODEL_ID = 'models/gemini-2.0-flash'
 
 @st.cache_resource
 def setup_kiwi_brain():
-    """Inicializa el contenido con FALLBACK INTELIGENTE (Prioriza Caché, pero no muere sin él)"""
+    """Inicializa el contenido con FALLBACK INTELIGENTE y LÓGICA V16"""
     try:
         path = 'catalogo_kiwigeek.json'
         if not os.path.exists(path):
@@ -180,12 +181,14 @@ def setup_kiwi_brain():
             "1. Si el cliente no especifica 'Solo Torre' o 'PC Completa', PREGUNTA PRIMERO.\n"
             "2. Si ya especificó, avanza.\n\n"
             "--- PASO 1: LÓGICA DE COMPONENTES ---\n"
-            "1. CASE: Manténlo económico (incluso en opciones caras) para priorizar rendimiento.\n"
+            "1. CASE: Manténlo económico (incluso en opciones caras) para priorizar rendimiento, salvo que el cliente pida estética.\n"
             "2. FUENTE: Si subes GPU, sube la Fuente (Watts/Certificación) obligatoriamente.\n\n"
-            "--- PASO 2: ALGORITMOS DE COTIZACIÓN ---\n"
-            "1. OPCIÓN A (AHORRO): [P - 10%]. Recorta Case, Placa y lujos.\n"
-            "2. OPCIÓN B (IDEAL): [P Exacto]. Equilibrio.\n"
-            "3. OPCIÓN C (POTENCIA PURA): [P + 15%]. Invierte en GPU -> Fuente -> RAM -> CPU.\n\n"
+            "--- PASO 2: ALGORITMOS DE COTIZACIÓN (ESTRICTO) ---\n"
+            "PRIORIDAD CRÍTICA: AJÚSTATE AL PRESUPUESTO (P). TUS OPCIONES DEBEN ORBITAR EL PRECIO SOLICITADO.\n"
+            "1. OPCIÓN A (RENDIMIENTO PURO): Intenta gastar EXACTAMENTE el presupuesto [P] invirtiendo casi todo en GPU/CPU.\n"
+            "2. OPCIÓN B (EQUILIBRIO): Intenta gastar EXACTAMENTE el presupuesto [P] con mejores componentes secundarios (Placa/RAM).\n"
+            "3. OPCIÓN C (POTENCIA +): [P + 5% MÁXIMO]. Solo sube el precio levemente si logras un salto tecnológico real.\n"
+            "NOTA MATEMÁTICA: Si el usuario dice '2000', las opciones deben estar entre 1950 y 2100. NO MÁS.\n\n"
             "--- PASO 3: ARGUMENTACIÓN DE VENTAS ---\n"
             "En la OPCIÓN C (y B si aplica), usa el icono '💡' para explicar la mejora:\n"
             "- GPU: '💡 Potencia Gráfica: Juega en Ultra con más FPS.'\n"
@@ -205,7 +208,7 @@ def setup_kiwi_brain():
             "\n"
             "--- CIERRE DE VENTA ---\n"
             "Finaliza con:\n"
-            "'⚠ **ATENCIÓN:** Si decides comprar tu **PC COMPLETA** con nosotros, comunícate al WhatsApp para aplicarte un **DESCUENTO ADICIONAL EXCLUSIVO**.'"
+            f"'⚠ **ATENCIÓN:** Si decides comprar tu **PC COMPLETA** con nosotros, haz clic aquí para un **[DESCUENTO ADICIONAL EXCLUSIVO EN WHATSAPP]({WHATSAPP_LINK})**.'"
         )
 
         try:
@@ -213,7 +216,7 @@ def setup_kiwi_brain():
             cache = client.caches.create(
                 model=MODEL_ID,
                 config=types.CreateCachedContentConfig(
-                    display_name='kiwigeek_v15_linkfix',
+                    display_name='kiwigeek_v16_budgetfix',
                     system_instruction=system_instruction,
                     contents=[catalog_data],
                     ttl='7200s',
@@ -259,7 +262,7 @@ if "chat_session" not in st.session_state:
                 )
             )
         else:
-            # MODO 2: ESTÁNDAR (Gratis pero consume límites, o Pago por uso alto)
+            # MODO 2: ESTÁNDAR
             st.session_state.is_cached_active = False
             st.session_state.chat_session = client.chats.create(
                 model=MODEL_ID,
