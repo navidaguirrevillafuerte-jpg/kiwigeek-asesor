@@ -147,37 +147,38 @@ apply_custom_styles()
 if not os.path.exists('catalogo_kiwigeek.json'):
     with open('catalogo_kiwigeek.json', 'w') as f: json.dump({"products": []}, f)
 
-# --- MOTORES DE LÓGICA ---
+# --- MOTORES DE LÓGICA (EXTRACTOR BLINDADO V32) ---
 
 def extract_json_from_text(text):
-    """Extrae JSON limpio y repara errores comunes de IA (CIRUJANO DE CÓDIGO V29)."""
+    """
+    Intenta reparar y extraer JSON incluso si la IA lo envía mal formado.
+    """
     text_clean = text
     try:
-        # 1. Buscar bloque de código ```json ... ```
-        json_match = re.search(r'```json\s*(.*?)\s*```', text, re.DOTALL)
-        if json_match:
-            text_clean = json_match.group(1)
-        else:
-            # 2. Limpieza agresiva: Encontrar primer { y último }
-            start = text.find('{')
-            end = text.rfind('}')
-            if start != -1 and end != -1:
-                text_clean = text[start:end+1]
+        # 1. Intentar capturar el bloque JSON más grande posible
+        # Buscamos desde la primera llave abierta hasta la última cerrada
+        match = re.search(r'\{.*\}', text, re.DOTALL)
+        if match:
+            text_clean = match.group(0)
         
-        # --- CIRUGÍA PLÁSTICA DE DATOS ---
-        # 1. Eliminar comentarios
-        text_clean = re.sub(r'//.*', '', text_clean)
-        # 2. Corregir booleanos Python a JSON (Error común de IA)
+        # 2. LIMPIEZA QUIRÚRGICA
+        # Eliminar comentarios JS (// ...)
+        text_clean = re.sub(r'//.*?\n', '\n', text_clean)
+        # Corregir comas finales en objetos/listas (Error muy común: {a:1,})
+        text_clean = re.sub(r',\s*\}', '}', text_clean)
+        text_clean = re.sub(r',\s*\]', ']', text_clean)
+        # Normalizar booleanos y nulos (Python vs JSON)
         text_clean = text_clean.replace("True", "true").replace("False", "false").replace("None", "null")
-        # 3. Eliminar comas traicioneras
-        text_clean = re.sub(r',\s*}', '}', text_clean)
-        text_clean = re.sub(r',\s*]', ']', text_clean)
         
+        # 3. Intentar parsear como JSON estándar
         return json.loads(text_clean)
     except:
-        # Fallback supremo: Intentar evaluar como diccionario de Python seguro
+        # 4. PLAN B: Intentar parsear como estructura de Python (ast)
+        # Esto ayuda si la IA usó comillas simples o True/False
         try:
-            return ast.literal_eval(text_clean)
+            # Revertimos a formato Python para ast.literal_eval
+            text_python = text_clean.replace("true", "True").replace("false", "False").replace("null", "None")
+            return ast.literal_eval(text_python)
         except:
             pass
     return None
@@ -187,15 +188,23 @@ def render_vertical_option(option):
     title = option.get('title', 'Opción')
     strategy = option.get('strategy', '')
     
-    # ORDENAMIENTO: PYTHON NO TOCA NADA. Se usa el orden directo de la IA.
+    # ORDENAMIENTO: Confianza total en el orden que envía la IA
     components = option.get('components', []) 
     
     total = sum(float(c.get('price', 0)) for c in components)
     
     rows_html = ""
     for c in components:
-        # Usamos la categoría tal cual viene del JSON
-        cat_display = c.get('category', 'Componente').upper()
+        # Normalizar nombres de categoría para mostrar
+        cat_raw = c.get('category', 'Componente').upper()
+        cat_display = cat_raw
+        # Pequeño mapa de visualización para que se vea prolijo
+        if "PROCESADOR" in cat_raw or "CPU" in cat_raw: cat_display = "PROCESADOR"
+        elif "PLACA" in cat_raw: cat_display = "PLACA MADRE"
+        elif "VIDEO" in cat_raw or "GPU" in cat_raw: cat_display = "TARJETA VIDEO"
+        elif "RAM" in cat_raw: cat_display = "MEMORIA RAM"
+        elif "FUENTE" in cat_raw: cat_display = "FUENTE PODER"
+        elif "ALMACENAMIENTO" in cat_raw or "SSD" in cat_raw: cat_display = "ALMACENAMIENTO"
         
         name = c.get('name', 'Producto')
         url = c.get('url', '#')
@@ -229,20 +238,24 @@ def process_response(text, filtered_count=0):
     """Renderiza la respuesta final."""
     data = extract_json_from_text(text)
     
-    # Si sigue sin ser válido, limpiar el texto crudo para que al menos se lea
+    # Si sigue sin ser válido, mostramos mensaje de error en lugar de texto crudo
     if not data or not isinstance(data, dict): 
-        clean_text = text.replace("```json", "").replace("```", "")
-        return clean_text
+        return """
+        <div style="background:#330000; color:#ffcccc; padding:15px; border-radius:8px;">
+            ⚠️ <b>Error de Formato:</b> La IA generó una respuesta que no se pudo procesar visualmente.
+            Por favor, intenta preguntar de nuevo.
+        </div>
+        """
         
     if not data.get("is_quote"): return data.get("message", text)
     
     html = f"<div style='margin-bottom:20px; color:#ddd;'>{data.get('intro','')}</div>"
     
-    # Renderizar solo las opciones válidas
+    # Renderizar opciones
     for opt in data.get('options', []):
         html += render_vertical_option(opt)
     
-    # Mensaje si se filtraron opciones
+    # Mensaje de filtrado
     if filtered_count > 0:
         html += f"""
         <div style="background:#332200; border:1px solid #664400; color:#ffcc00; padding:10px; border-radius:8px; font-size:0.9rem; margin-top:10px;">
@@ -280,14 +293,14 @@ def setup_kiwi_brain():
             catalog = f.read()
             
         sys_prompt = (
-            "ERES KIWIGEEK AI. TU OBJETIVO: GENERAR JSON PERFECTO PARA COTIZAR PC.\n"
+            "ERES KIWIGEEK AI. TU OBJETIVO: GENERAR JSON PERFECTO Y ORDENADO.\n"
             "INPUT: Usuario pide PC y da presupuesto.\n"
-            "OUTPUT: JSON estricto sin comentarios //.\n\n"
-            "--- FASE 1: VALIDACIÓN ---\n"
-            "Si el usuario NO dice si quiere 'Solo Torre' o 'PC Completa', devuelve:\n"
-            "{ \"is_quote\": false, \"message\": \"👋 Hola, para ajustarme a tu presupuesto, ¿necesitas solo la torre (CPU) o la PC completa con monitor?\" }\n\n"
-            "--- FASE 2: GENERACIÓN (3 OPCIONES) ---\n"
-            "Genera SIEMPRE 3 opciones (A, B, C) intentando acercarte al presupuesto.\n"
+            "OUTPUT: JSON estricto sin comentarios.\n\n"
+            "--- VALIDACIÓN ---\n"
+            "Si falta 'Solo Torre' o 'PC Completa', pregunta primero.\n"
+            "{ \"is_quote\": false, \"message\": \"...\" }\n\n"
+            "--- COTIZACIÓN ---\n"
+            "Genera 3 opciones (A, B, C).\n"
             "JSON OBLIGATORIO:\n"
             "```json\n"
             "{\n"
@@ -299,25 +312,30 @@ def setup_kiwi_brain():
             "      \"title\": \"Opción A\", \"strategy\": \"...\",\n"
             "      \"components\": [\n"
             "         {\"category\": \"PROCESADOR\", \"name\": \"...\", \"price\": 0, \"url\": \"...\"},\n"
-            "         {\"category\": \"PLACA MADRE\", \"name\": \"...\", \"price\": 0, \"url\": \"...\"}\n"
+            "         {\"category\": \"PLACA\", \"name\": \"...\", \"price\": 0, \"url\": \"...\"}\n"
             "      ]\n"
             "    }\n"
             "  ],\n"
             "  \"outro\": \"...\"\n"
             "}\n"
             "```\n"
-            "REGLAS:\n"
-            "1. NO sumes totales. Solo precios unitarios.\n"
-            "2. Incluye TODOS los componentes necesarios.\n"
-            "3. ORDEN OBLIGATORIO DE 'components' (¡CRÍTICO!): \n"
-            "   [PROCESADOR, PLACA MADRE, RAM, GPU, SSD, FUENTE, CASE, (MONITOR/PERIFÉRICOS)].\n"
-            "   TÚ ERES RESPONSABLE DEL ORDEN VISUAL.\n"
+            "REGLAS CRÍTICAS:\n"
+            "1. NO COMENTARIOS (//). JSON PURO.\n"
+            "2. ORDEN VISUAL ES TU RESPONSABILIDAD: Debes ordenar la lista 'components' así:\n"
+            "   1. PROCESADOR\n"
+            "   2. PLACA MADRE\n"
+            "   3. RAM\n"
+            "   4. GPU\n"
+            "   5. SSD\n"
+            "   6. FUENTE\n"
+            "   7. CASE\n"
+            "   8. (MONITOR/PERIFÉRICOS)\n"
         )
         
         return client.caches.create(
             model=MODEL_ID,
             config=types.CreateCachedContentConfig(
-                display_name='kiwigeek_v30_python_hands_off',
+                display_name='kiwigeek_v32_bulletproof_json',
                 system_instruction=sys_prompt,
                 contents=[catalog],
                 ttl='7200s'
@@ -355,7 +373,7 @@ st.markdown("""
     <div style="text-align:center; padding-bottom: 20px;">
         <img src="https://kiwigeekperu.com/wp-content/uploads/2025/06/Diseno-sin-titulo-24.png" height="80">
         <h1 class='neon-title'>AI</h1>
-        <p style='color:#666;'>Ingeniería de Hardware v30.0</p>
+        <p style='color:#666;'>Ingeniería de Hardware v32.0</p>
     </div>
 """, unsafe_allow_html=True)
 
@@ -383,8 +401,8 @@ if prompt := st.chat_input("Ej: Tengo S/ 3800 para PC Completa..."):
                 response = st.session_state.chat_session.send_message(prompt)
                 raw = response.text
                 
-                # 2. FILTRO Y AUDITORÍA (LOOP MEJORADO)
-                max_retries = 3 # Aumentamos intentos de reparación
+                # 2. FILTRO Y AUDITORÍA (LOOP DE CORRECCIÓN)
+                max_retries = 3 
                 attempt = 0
                 final_json = None
                 filtered_count = 0
@@ -392,22 +410,19 @@ if prompt := st.chat_input("Ej: Tengo S/ 3800 para PC Completa..."):
                 while attempt < max_retries:
                     data = extract_json_from_text(raw)
                     
-                    # ERROR 1: FORMATO INCORRECTO (EL PROBLEMA QUE VISTE)
                     if not data or not isinstance(data, dict): 
                         attempt += 1
-                        print("Error formato. Solicitando corrección a la IA...")
-                        msg = "SYSTEM_ERROR: Your response was not valid JSON. Please return ONLY a valid JSON object. No markdown text outside JSON."
+                        print("Error formato JSON. Reintentando...")
+                        msg = "ERROR: JSON INVALID. Return ONLY valid JSON. Check brackets and commas."
                         raw = st.session_state.chat_session.send_message(msg).text
-                        continue # Volvemos al inicio del loop a intentar leer el nuevo mensaje
+                        continue 
                     
-                    # ERROR 2: NO ES COTIZACIÓN (Es charla)
                     if not data.get("is_quote"):
                         final_json = json.dumps(data)
                         break
                     
-                    # AUDITORÍA DE PRECIOS CON RESPALDO
                     budget = float(data.get("detected_budget", 0))
-                    # Respaldo: Si la IA dice presupuesto 0, buscamos en el texto del usuario
+                    # Respaldo de presupuesto
                     if budget == 0:
                         nums = re.findall(r'\d+', prompt.replace(',', ''))
                         if nums: budget = float(max(nums, key=len))
@@ -415,11 +430,10 @@ if prompt := st.chat_input("Ej: Tengo S/ 3800 para PC Completa..."):
                     valid_options = []
                     filtered_in_this_run = 0
                     
-                    # Si detectamos presupuesto, auditamos
                     if budget > 0:
                         for opt in data.get('options', []):
                             total = sum(float(c.get('price', 0)) for c in opt.get('components', []))
-                            limit = budget * 1.15 # Tolerancia del 15%
+                            limit = budget * 1.15
                             if total <= limit:
                                 valid_options.append(opt)
                             else:
@@ -431,18 +445,17 @@ if prompt := st.chat_input("Ej: Tengo S/ 3800 para PC Completa..."):
                             filtered_count = filtered_in_this_run
                             break 
                         else:
-                            # Todas las opciones eran muy caras -> Pedimos regenerar
                             attempt += 1
-                            msg = f"AUDIT_FAIL: All options exceeded {budget}. Cheapest was too expensive. REGENERATE CHEAPER BUILD. Downgrade components."
+                            msg = f"ERROR: All options too expensive (Budget: {budget}). Regenerate CHEAPER options."
                             raw = st.session_state.chat_session.send_message(msg).text
                             continue
                     else:
-                        # No hay presupuesto para auditar, pasamos lo que hay
                         final_json = json.dumps(data)
                         break
                 
-                # Si después de 3 intentos sigue fallando, mostramos texto limpio sin etiquetas de código
-                if final_json is None: final_json = raw.replace("```json", "").replace("```", "")
+                # Si falló todo, mostramos mensaje de error
+                if final_json is None: 
+                    final_json = raw # Guardamos lo que haya para debug, pero el render mostrará error
                 
                 # 3. Renderizar
                 final_html = process_response(final_json, filtered_count)
@@ -454,7 +467,7 @@ if prompt := st.chat_input("Ej: Tengo S/ 3800 para PC Completa..."):
                     "filtered_count": filtered_count
                 })
                 
-            except:
-                st.error("Conexión perdida. Reiniciando cerebro...")
+            except Exception as e:
+                st.error(f"Error crítico: {str(e)}")
                 if "chat_session" in st.session_state: del st.session_state["chat_session"]
-                st.rerun()
+                # st.rerun()
