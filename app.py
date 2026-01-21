@@ -188,12 +188,14 @@ with st.sidebar:
             del st.session_state["chat_session"]
         st.rerun()
 
-# HEADER CON LOGO Y NEON AI (Restaurado)
+# HEADER CON LOGO Y NEON AI (Actualizado: Lado a Lado)
 st.markdown("""
-    <div style="text-align:center; padding-bottom: 20px;">
+    <div style="display: flex; align-items: center; justify-content: center; gap: 15px; padding-bottom: 10px;">
         <img src="https://kiwigeekperu.com/wp-content/uploads/2025/06/Diseno-sin-titulo-24.png" height="80">
         <h1 class='neon-title'>AI</h1>
-        <p style='color:#666; font-size:0.9rem; margin-top: 10px;'>Cotizador Simple</p>
+    </div>
+    <div style="text-align:center; padding-bottom: 20px;">
+        <p style='color:#666; font-size:0.9rem; margin: 0;'>Cotizador Simple</p>
     </div>
 """, unsafe_allow_html=True)
 
