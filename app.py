@@ -68,14 +68,30 @@ def apply_custom_styles():
             border-left: 4px solid {COLORS['kiwi_blue']} !important;
         }}
 
-        /* Input del Chat */
+        /* --- ESTILOS DEL INPUT DE CHAT --- */
         .stChatInputContainer {{
-            padding-bottom: 20px !important;
+            padding-bottom: 30px !important; /* Subir un poco el input */
+            padding-top: 10px !important;
+            background-color: transparent !important;
+        }}
+
+        /* Estilizar la caja de texto misma */
+        .stChatInput textarea {{
+            background-color: #252525 !important; /* Fondo más visible */
+            border: 1px solid #444 !important;    /* Borde sutil */
+            color: #fff !important;
+            border-radius: 12px !important;
         }}
         
-        /* Ajustar ancho del contenedor principal para centrarlo y dar aire a los lados */
+        /* Efecto focus en el input */
+        .stChatInput textarea:focus {{
+            border: 1px solid {COLORS['kiwi_green']} !important;
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.2) !important;
+        }}
+        
+        /* Ajustar ancho del contenedor principal (Punto medio) */
         .block-container {{
-            max-width: 900px !important;
+            max-width: 1000px !important; /* Antes 900px, ahora un poco más ancho */
             padding-left: 2rem !important;
             padding-right: 2rem !important;
             margin: auto !important;
@@ -221,4 +237,3 @@ if prompt := st.chat_input("Ej: Tengo S/ 4000 para una PC de Streaming..."):
 
 # Footer
 st.markdown("<br><hr><p style='text-align: center; color: #555;'>© 2025 Kiwigeek Perú - Hardware for Professionals</p>", unsafe_allow_html=True)
-
