@@ -16,7 +16,7 @@ st.set_page_config(
 AVATAR_URL = "https://kiwigeekperu.com/wp-content/uploads/2026/01/gatitow.webp"
 WHATSAPP_LINK = "https://api.whatsapp.com/send/?phone=51939081940&text=Hola%2C+me+gustar%C3%ADa+saber+m%C3%A1s+de+sus+productos&type=phone_number&app_absent=0"
 
-# --- CSS MIXTO (Header Neón + Chat Limpio) ---
+# --- CSS MIXTO (Header Neón + Chat Limpio + Sidebar Mejorado) ---
 def apply_custom_styles():
     st.markdown("""
         <style>
@@ -33,7 +33,7 @@ def apply_custom_styles():
             text-shadow: 0 0 30px rgba(0,255,65,0.6);
             text-align: center;
             font-weight: 900 !important;
-            font-size: 6rem !important; /* AUMENTADO DE 3.5rem a 6rem */
+            font-size: 6rem !important;
             margin: 0;
             line-height: 1;
         }
@@ -71,24 +71,44 @@ def apply_custom_styles():
 
         /* --- ESTILO PARA EL SIDEBAR (Indicaciones) --- */
         [data-testid="stSidebar"] {
-            background-color: #f8f9fa; /* Fondo ligero para diferenciar */
+            background-color: #f8f9fa; 
         }
-        .limitation-box {
+        
+        /* Caja genérica */
+        .info-box {
             background: #fff;
             border: 1px solid #ddd;
             border-radius: 10px;
             padding: 15px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
-        .limitation-title {
+        
+        /* Título VERDE (Lo que SÍ hago) */
+        .info-title-yes {
+            color: #28a745; 
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #28a745;
+            padding-bottom: 5px;
+        }
+
+        /* Título ROJO (Lo que NO hago) */
+        .info-title-no {
             color: #d9534f;
             font-weight: bold;
             font-size: 1.1rem;
             margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            border-bottom: 2px solid #d9534f;
+            padding-bottom: 5px;
+        }
+        
+        .info-list {
+            padding-left: 20px; 
+            color: #333; 
+            font-size: 0.9rem;
+            margin-bottom: 0;
         }
         </style>
     """, unsafe_allow_html=True)
@@ -131,7 +151,7 @@ def setup_kiwi_brain():
         with open('catalogo_kiwigeek.json', 'r', encoding='utf-8') as f: 
             catalog = f.read()
             
-        sys_prompt = """ROL: Eres 'Kiwigeek AI', vendedor de hardware.
+        sys_prompt = """ROL: Eres 'Kiwigeek AI', vendedor de hardware especializado en armar PCs.
 OBJETIVO: Dar cotizaciones directas, simples y sin adornos.
 
 REGLAS DE FORMATO (ESTRICTAS):
@@ -199,14 +219,25 @@ if "chat_session" not in st.session_state:
 with st.sidebar:
     st.image('https://kiwigeekperu.com/wp-content/uploads/2025/06/Diseno-sin-titulo-24.png', use_container_width=True)
     
-    # Panel de Indicaciones / Limitaciones
+    # Panel ✅ Lo que SÍ hago
     st.markdown("""
-    <div class="limitation-box">
-        <div class="limitation-title">🚫 Lo que NO hago</div>
-        <ul style="padding-left: 20px; color: #333; font-size: 0.9rem;">
+    <div class="info-box">
+        <div class="info-title-yes">✅ Lo que SÍ hago</div>
+        <ul class="info-list">
+            <li><b>Cotizo PCs a medida</b> (Gaming/Trabajo).</li>
+            <li><b>Verifico compatibilidad</b> de piezas.</li>
+            <li><b>Doy precios y links</b> directos.</li>
+        </ul>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Panel 🚫 Lo que NO hago
+    st.markdown("""
+    <div class="info-box">
+        <div class="info-title-no">🚫 Lo que NO hago</div>
+        <ul class="info-list">
             <li><b>No doy soporte técnico</b> ni reparaciones.</li>
-            <li><b>No vendo Laptops</b> (Solo PCs de escritorio).</li>
-            <li><b>No acepto trade-ins</b> (partes en forma de pago).</li>
+            <li><b>No acepto trade-ins</b> (partes en pago).</li>
             <li><b>No doy crédito</b> directo.</li>
         </ul>
     </div>
