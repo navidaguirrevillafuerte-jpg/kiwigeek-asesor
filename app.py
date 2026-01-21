@@ -36,7 +36,7 @@ USER_AVATARS = [
 def apply_custom_styles():
     st.markdown(f"""
         <style>
-        /* Force reload styles v4.0 - Centered Mobile Look */
+        /* Force reload styles v4.1 - Black Focus Border */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
         
         * {{ font-family: 'Inter', sans-serif !important; }}
@@ -81,22 +81,22 @@ def apply_custom_styles():
         textarea[data-testid="stChatInputTextArea"] {{
             background-color: #e8e8e8 !important; /* Gris claro */
             color: #333333 !important; /* Texto gris oscuro */
-            caret-color: #333333 !important;
-            border: 2px solid #555 !important;
+            caret-color: #000000 !important; /* Cursor negro */
+            border: 2px solid transparent !important; /* SIN BORDE (Transparente) por defecto */
             border-radius: 15px !important;
         }}
         
         /* Placeholder del input */
         textarea[data-testid="stChatInputTextArea"]::placeholder {{
             color: #666666 !important;
-            opacity: 1 !important;
+            opacity: 0.8 !important;
         }}
         
-        /* Efecto Focus */
+        /* Efecto Focus (Al hacer click) */
         textarea[data-testid="stChatInputTextArea"]:focus {{
-            border: 2px solid {COLORS['kiwi_green']} !important;
+            border: 2px solid #000000 !important; /* BORDE NEGRO al hacer click */
             background-color: #ffffff !important;
-            box-shadow: 0 0 20px rgba(0, 255, 65, 0.25) !important;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important; /* Sombra negra suave */
         }}
         
         /* --- AJUSTE CRÍTICO DE ANCHO Y CENTRADO --- */
