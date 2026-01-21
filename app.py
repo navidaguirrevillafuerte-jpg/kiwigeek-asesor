@@ -70,23 +70,24 @@ def apply_custom_styles():
 
         /* --- ESTILOS DEL INPUT DE CHAT --- */
         .stChatInputContainer {{
-            padding-bottom: 130px !important; /* Subido aún más (Antes 90px) */
-            padding-top: 10px !important;
+            padding-bottom: 170px !important; /* SUBIDO BASTANTE MÁS (Antes 130px) */
+            padding-top: 20px !important;
             background-color: transparent !important;
         }}
 
         /* Estilizar la caja de texto misma */
-        .stChatInput textarea {{
-            background-color: #f0f0f0 !important; /* Fondo gris claro */
-            border: 2px solid #ccc !important;
-            color: #333 !important; /* Texto gris oscuro */
-            caret-color: #333 !important;
-            border-radius: 12px !important;
+        /* Usamos selectores más específicos para asegurar que el estilo se aplique */
+        .stChatInput textarea, div[data-testid="stChatInput"] textarea {{
+            background-color: #e8e8e8 !important; /* Gris claro (no blanco puro, no negro) */
+            border: 2px solid #555 !important;
+            color: #333333 !important; /* Gris oscuro para las letras (NO negro puro) */
+            caret-color: #333333 !important;
+            border-radius: 15px !important;
         }}
         
         /* Color del placeholder (texto de ayuda) */
         .stChatInput textarea::placeholder {{
-            color: #666 !important;
+            color: #666666 !important;
         }}
         
         /* Efecto focus en el input */
@@ -96,11 +97,11 @@ def apply_custom_styles():
             background-color: #ffffff !important;
         }}
         
-        /* Ajustar ancho del contenedor principal (Centrado y márgenes amplios) */
+        /* Ajustar ancho del contenedor principal (Márgenes laterales MUCHO más amplios) */
         .block-container {{
-            max-width: 800px !important; /* Reducido a 800px para más margen lateral */
-            padding-left: 2rem !important;
-            padding-right: 2rem !important;
+            max-width: 700px !important; /* Reducido a 700px para que se vea más compacto */
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
             margin: auto !important;
         }}
 
