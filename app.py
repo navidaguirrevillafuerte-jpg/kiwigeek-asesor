@@ -22,6 +22,13 @@ st.markdown("""
         --kiwi-light-gray: #2d2d2d;
     }
     
+    /* Tipografía global - Similar a tu web */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
+    
+    * {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+    }
+    
     /* Fondo principal */
     .stApp {
         background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
@@ -29,11 +36,11 @@ st.markdown("""
     
     /* Contenedor principal más ancho */
     .main .block-container {
-        max-width: 1200px;
+        max-width: 900px;
         padding-top: 2rem;
         padding-bottom: 2rem;
-        padding-left: 5rem;
-        padding-right: 5rem;
+        padding-left: 2rem;
+        padding-right: 2rem;
     }
     
     @media (max-width: 768px) {
@@ -47,11 +54,12 @@ st.markdown("""
     h1 {
         color: #00FF41 !important;
         text-shadow: 0 0 10px #00FF41, 0 0 20px #00FF41, 0 0 30px #00FF41;
-        font-weight: 900 !important;
+        font-weight: 700 !important;
         text-align: center;
         padding: 10px 0;
         animation: pulse 2s ease-in-out infinite;
-        font-size: 2.8em !important;
+        font-size: 2.5em !important;
+        letter-spacing: -0.5px;
     }
     
     @keyframes pulse {
@@ -64,52 +72,62 @@ st.markdown("""
         color: #0066FF !important;
         text-align: center;
         font-weight: 600 !important;
+        letter-spacing: -0.3px;
     }
     
-    /* Cajas de información */
+    /* Texto en cajas info */
     .stInfo {
         background: linear-gradient(135deg, #0066FF22 0%, #00FF4122 100%) !important;
         border-left: 4px solid #00FF41 !important;
         border-radius: 10px !important;
         box-shadow: 0 4px 15px rgba(0, 255, 65, 0.2);
+        font-weight: 500 !important;
+    }
+    
+    .stInfo p {
+        font-size: 0.95em !important;
+        line-height: 1.6 !important;
     }
     
     /* Mensajes del chat */
     .stChatMessage {
         background: #2d2d2d !important;
-        border-radius: 15px !important;
+        border-radius: 12px !important;
         border: 1px solid #4a4a4a !important;
-        margin: 10px 0 !important;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        margin: 12px 0 !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        font-size: 0.95em !important;
     }
     
     /* Mensajes del usuario */
     .stChatMessage[data-testid="user-message"] {
-        background: linear-gradient(135deg, #0066FF33 0%, #0066FF22 100%) !important;
-        border-left: 4px solid #0066FF !important;
+        background: linear-gradient(135deg, #0066FF28 0%, #0066FF18 100%) !important;
+        border-left: 3px solid #0066FF !important;
     }
     
     /* Mensajes del asistente */
     .stChatMessage[data-testid="assistant-message"] {
-        background: linear-gradient(135deg, #00FF4122 0%, #00FF4111 100%) !important;
-        border-left: 4px solid #00FF41 !important;
+        background: linear-gradient(135deg, #00FF4118 0%, #00FF4108 100%) !important;
+        border-left: 3px solid #00FF41 !important;
     }
     
     /* Input del chat */
     .stChatInput {
         background: #2d2d2d !important;
-        border: 2px solid #00FF41 !important;
-        border-radius: 25px !important;
-        box-shadow: 0 0 15px rgba(0, 255, 65, 0.3);
+        border: 2px solid #00FF4144 !important;
+        border-radius: 20px !important;
+        box-shadow: 0 0 12px rgba(0, 255, 65, 0.25);
     }
     
     .stChatInput input {
-        color: #00FF41 !important;
-        font-weight: 500;
+        color: #e0e0e0 !important;
+        font-weight: 500 !important;
+        font-size: 0.95em !important;
     }
     
     .stChatInput input::placeholder {
-        color: #4a4a4a !important;
+        color: #6a6a6a !important;
+        font-weight: 400 !important;
     }
     
     /* Botones */
@@ -151,6 +169,14 @@ st.markdown("""
     /* Texto general */
     p, li, span {
         color: #e0e0e0 !important;
+        line-height: 1.6 !important;
+    }
+    
+    /* Texto del chat más legible */
+    .stChatMessage p {
+        font-size: 0.95em !important;
+        line-height: 1.65 !important;
+        font-weight: 400 !important;
     }
     
     /* Scrollbar personalizado */
@@ -200,11 +226,11 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- HEADER CON LOGO ---
-st.markdown("<div style='text-align: center; padding: 30px 0 20px 0;'>", unsafe_allow_html=True)
+st.markdown("<div style='text-align: center; padding: 40px 0 30px 0;'>", unsafe_allow_html=True)
 st.markdown("""
     <img src='https://kiwigeekperu.com/wp-content/uploads/2025/06/Diseno-sin-titulo-24.png' 
          alt='Kiwigeek Logo'
-         style='max-width: 380px; width: 100%; filter: drop-shadow(0 0 30px rgba(0, 255, 65, 0.5));'>
+         style='max-width: 360px; width: 100%; filter: drop-shadow(0 0 30px rgba(0, 255, 65, 0.4));'>
 """, unsafe_allow_html=True)
 st.markdown("</div>", unsafe_allow_html=True)
 
@@ -217,40 +243,9 @@ st.markdown("""
     </h1>
 """, unsafe_allow_html=True)
 
-# Tres columnas para stats minimalistas
-col1, col2, col3 = st.columns(3)
+st.markdown("<div style='text-align: center; color: #6a6a6a; font-size: 1em; margin-bottom: 30px; font-weight: 500;'>Tu Ingeniero de Hardware Personal</div>", unsafe_allow_html=True)
 
-with col1:
-    st.markdown("""
-        <div style='text-align: center; padding: 20px; background: #2d2d2d; border-radius: 15px; border: 1px solid #00FF4133;'>
-            <div style='font-size: 2.5em; color: #00FF41;'>⚡</div>
-            <div style='color: #e0e0e0; font-weight: 600; margin-top: 8px;'>Cotizaciones</div>
-            <div style='color: #00FF41; font-weight: 700; font-size: 1.2em;'>Instantáneas</div>
-        </div>
-    """, unsafe_allow_html=True)
-
-with col2:
-    st.markdown("""
-        <div style='text-align: center; padding: 20px; background: #2d2d2d; border-radius: 15px; border: 1px solid #0066FF33;'>
-            <div style='font-size: 2.5em; color: #0066FF;'>🎯</div>
-            <div style='color: #e0e0e0; font-weight: 600; margin-top: 8px;'>Recomendaciones</div>
-            <div style='color: #0066FF; font-weight: 700; font-size: 1.2em;'>Personalizadas</div>
-        </div>
-    """, unsafe_allow_html=True)
-
-with col3:
-    st.markdown("""
-        <div style='text-align: center; padding: 20px; background: #2d2d2d; border-radius: 15px; border: 1px solid #00FF4133;'>
-            <div style='font-size: 2.5em; color: #00FF41;'>💰</div>
-            <div style='color: #e0e0e0; font-weight: 600; margin-top: 8px;'>Presupuestos</div>
-            <div style='color: #00FF41; font-weight: 700; font-size: 1.2em;'>Ajustables</div>
-        </div>
-    """, unsafe_allow_html=True)
-
-st.markdown("<br>", unsafe_allow_html=True)
-
-st.markdown("### 🎯 Tu Ingeniero de Hardware Personal")
-st.info("💡 **Ejemplo:** *'Armame una PC tengo 4000 soles'* o *'Quiero una PC gamer para jugar Valorant'*")
+st.info("💡 **Ejemplo:** *'Armame una PC tengo 4000 soles'* o *'Quiero una PC gamer para Valorant'*")
 
 # --- GESTIÓN DE LA LLAVE DE SEGURIDAD ---
 try:
@@ -339,8 +334,8 @@ if "chat" not in st.session_state:
 
 # --- SEPARADOR VISUAL ---
 st.markdown("""
-    <div style='margin: 30px 0;'>
-        <div style='height: 2px; background: linear-gradient(90deg, transparent, #00FF41, #0066FF, transparent);'></div>
+    <div style='margin: 35px 0 25px 0;'>
+        <div style='height: 1px; background: linear-gradient(90deg, transparent, #00FF4144, transparent);'></div>
     </div>
 """, unsafe_allow_html=True)
 
@@ -368,19 +363,15 @@ if prompt := st.chat_input("¿Qué PC estás buscando hoy? 💻"):
 
 # --- FOOTER ---
 st.markdown("""
-    <div style='margin: 40px 0 20px 0;'>
-        <div style='height: 2px; background: linear-gradient(90deg, transparent, #00FF41, #0066FF, transparent);'></div>
+    <div style='margin: 50px 0 0 0;'>
+        <div style='height: 1px; background: linear-gradient(90deg, transparent, #00FF4144, transparent);'></div>
     </div>
 """, unsafe_allow_html=True)
 
-col_footer1, col_footer2, col_footer3 = st.columns([1, 2, 1])
-
-with col_footer2:
-    st.markdown(
-        "<p style='text-align: center; color: #4a4a4a; font-size: 1em;'>"
-        "<img src='https://kiwigeekperu.com/wp-content/uploads/2026/01/gatitow.webp' style='width: 28px; vertical-align: middle; margin-right: 10px;'>"
-        "<strong style='color: #00FF41; font-size: 1.1em;'>Kiwigeek</strong> - Equipamos tu poder | "
-        "<span style='color: #0066FF;'>Hecho con 💚 en Perú</span>"
-        "</p>",
-        unsafe_allow_html=True
-    )
+st.markdown(
+    "<p style='text-align: center; color: #4a4a4a; font-size: 0.95em; margin-top: 20px;'>"
+    "<img src='https://kiwigeekperu.com/wp-content/uploads/2026/01/gatitow.webp' style='width: 26px; vertical-align: middle; margin-right: 8px;'>"
+    "<strong style='color: #00FF41;'>Kiwigeek</strong> - Equipamos tu poder"
+    "</p>",
+    unsafe_allow_html=True
+)
