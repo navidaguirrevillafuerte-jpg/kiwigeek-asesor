@@ -158,7 +158,7 @@ def initialize_session(force=False):
         if not st.session_state.messages:
             st.session_state.messages.append({
                 "role": "assistant", 
-                "content": "¡Hola! Soy **Kiwigeek AI**. Dime tu presupuesto y si buscas **Solo Torre** o **PC Completa** para darte 3 opciones optimizadas."
+                "content": "¡Hola! Soy **Kiwigeek AI**. Dime tu presupuesto y si buscas **Solo Torre** o **PC Completa** para darte opciones optimizadas."
             })
 
 # Llamar siempre al inicio para asegurar que el objeto chat_session esté vivo
@@ -261,6 +261,7 @@ if prompt := st.chat_input("Dime tu presupuesto y tipo de PC..."):
                         st.markdown("Conexión restablecida automáticamente. Por favor vuelve a enviar el mensaje para procesar la cotización.")
                 except:
                     st.error("La conexión se ha interrumpido por inactividad. Por favor, pulsa 'Reiniciar Chat' o intenta enviar el mensaje nuevamente.")
+
 
 
 
