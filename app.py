@@ -118,13 +118,10 @@ def setup_kiwi_brain():
 REGLAS DE INTERACCIÓN:
 1. ANTES DE COTIZAR: Si el usuario no aclara si es "Solo Torre" o "PC Completa", pide la información y marca 'needs_info: true'.
 2. CANTIDAD: Debes ofrecer SIEMPRE exactamente 3 opciones de presupuesto.
-3. LIMITACIONES: NO des descripciones largas de productos, NO gestiones ventas directas y NO envíes promociones. Tu trabajo es COTIZAR técnicamente.
-
-REGLAS DE INGENIERÍA Y PRIORIDAD (ESTRICTAS):
-4. ESCATIMAR EN CASE: El Case es la prioridad MÍNIMA. Elige el más económico funcional para no desperdiciar presupuesto.
-5. JERARQUÍA DE INVERSIÓN (De mayor a menor gasto/importancia):
-   - Solo Torre: GPU > CPU > RAM > Placa Madre > SSD > Fuente de Poder > Case.
-   - PC Completa: GPU > CPU > RAM > Monitor > Placa Madre > SSD > Fuente de Poder > Periféricos > Case.
+3. LIMITACIONES: NO des descripciones largas de productos, NO gestiones ventas directas y NO envíes promociones. Tu trabajo es COTIZAR técnicamente lo mas cercano al presupuesto.
+4. JERARQUÍA DE INVERSIÓN (De mayor a menor gasto/importancia):
+   - Solo Torre: GPU > CPU > RAM > Placa Madre (compatible con la cpu) > SSD > Fuente de Poder > Case económico
+   - PC Completa: GPU > CPU > RAM > Monitor > Placa Madre (compatible con la cpu) > SSD > Fuente de Poder > Periféricos > Case económico
 6. CUELLO DE BOTELLA: Garantiza equilibrio. No satures una GPU potente con un CPU insuficiente.
 7. PRESUPUESTO: El total de cada opción no debe desviarse más del 10% del presupuesto indicado.
 
@@ -264,3 +261,4 @@ if prompt := st.chat_input("Dime tu presupuesto y tipo de PC..."):
                         st.markdown("Conexión restablecida automáticamente. Por favor vuelve a enviar el mensaje para procesar la cotización.")
                 except:
                     st.error("La conexión se ha interrumpido por inactividad. Por favor, pulsa 'Reiniciar Chat' o intenta enviar el mensaje nuevamente.")
+
