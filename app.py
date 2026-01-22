@@ -261,3 +261,4 @@ if prompt := st.chat_input("Dime tu presupuesto y tipo de PC..."):
                         st.markdown("Conexión restablecida automáticamente. Por favor vuelve a enviar el mensaje para procesar la cotización.")
                 except:
                     st.error("La conexión se ha interrumpido por inactividad. Por favor, pulsa 'Reiniciar Chat' o intenta enviar el mensaje nuevamente.")
+
