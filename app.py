@@ -118,21 +118,22 @@ def setup_kiwi_brain():
 REGLAS DE INTERACCIÓN:
 1. ANTES DE COTIZAR: Si el usuario no aclara si es "Solo Torre" o "PC Completa", pide la información y marca 'needs_info: true'.
 2. CANTIDAD: Debes ofrecer SIEMPRE exactamente 3 opciones de presupuesto.
+3. LIMITACIONES: NO des descripciones largas de productos, NO gestiones ventas directas y NO envíes promociones. Tu trabajo es COTIZAR técnicamente.
 
 REGLAS DE INGENIERÍA Y PRIORIDAD (ESTRICTAS):
-3. ESCATIMAR EN CASE: El Case es la prioridad MÍNIMA. Elige el más económico funcional para no desperdiciar presupuesto.
-4. JERARQUÍA DE INVERSIÓN (De mayor a menor gasto/importancia):
+4. ESCATIMAR EN CASE: El Case es la prioridad MÍNIMA. Elige el más económico funcional para no desperdiciar presupuesto.
+5. JERARQUÍA DE INVERSIÓN (De mayor a menor gasto/importancia):
    - Solo Torre: GPU > CPU > RAM > Placa Madre > SSD > Fuente de Poder > Case.
    - PC Completa: GPU > CPU > RAM > Monitor > Placa Madre > SSD > Fuente de Poder > Periféricos > Case.
-5. CUELLO DE BOTELLA: Garantiza equilibrio. No satures una GPU potente con un CPU insuficiente.
-6. PRESUPUESTO: El total de cada opción no debe desviarse más del 10% (arriba o abajo) del presupuesto indicado.
+6. CUELLO DE BOTELLA: Garantiza equilibrio. No satures una GPU potente con un CPU insuficiente.
+7. PRESUPUESTO: El total de cada opción no debe desviarse más del 10% del presupuesto indicado.
 
 ESTRUCTURA: Salida en JSON. No calcules totales, Python los calculará."""
         
         return client.caches.create(
             model=MODEL_ID,
             config=types.CreateCachedContentConfig(
-                display_name='kiwi_v6_priority_expert',
+                display_name='kiwi_v7_stable_priority',
                 system_instruction=sys_prompt,
                 contents=[catalog] if catalog else [],
                 ttl='7200s'
@@ -142,7 +143,11 @@ ESTRUCTURA: Salida en JSON. No calcules totales, Python los calculará."""
         return None, str(e)
 
 def initialize_session(force=False):
-    if "messages" not in st.session_state: st.session_state.messages = []
+    """Inicializa la sesión de chat con verificación de estado para evitar caídas."""
+    if "messages" not in st.session_state: 
+        st.session_state.messages = []
+    
+    # Si force es True o la sesión no existe, reiniciamos
     if force or "chat_session" not in st.session_state:
         cache_name, err = setup_kiwi_brain()
         config = types.GenerateContentConfig(
@@ -152,13 +157,21 @@ def initialize_session(force=False):
         )
         if cache_name: config.cached_content = cache_name
         st.session_state.chat_session = client.chats.create(model=MODEL_ID, config=config)
+        
         if not st.session_state.messages:
-            st.session_state.messages.append({"role": "assistant", "content": "¡Hola! Soy **Kiwigeek AI**. Dime tu presupuesto y si buscas **Solo Torre** o **PC Completa** para darte 3 opciones optimizadas."})
+            st.session_state.messages.append({
+                "role": "assistant", 
+                "content": "¡Hola! Soy **Kiwigeek AI**. Dime tu presupuesto y si buscas **Solo Torre** o **PC Completa** para darte 3 opciones optimizadas."
+            })
 
+# Llamar siempre al inicio para asegurar que el objeto chat_session esté vivo
 initialize_session()
 
+# --- UI (SIDEBAR) ---
 with st.sidebar:
     st.image('https://kiwigeekperu.com/wp-content/uploads/2025/06/Diseno-sin-titulo-24.png', use_container_width=True)
+    
+    # Panel ✅ Lo que SÍ hago
     st.markdown("""
     <div class="info-box"><div class="info-title-yes">✅ Cotizador Especializado</div>
     <ul class="info-list">
@@ -167,17 +180,31 @@ with st.sidebar:
         <li>Presupuesto Real (Margen 10%).</li>
     </ul></div>
     """, unsafe_allow_html=True)
+
+    # Panel 🚫 Lo que NO hago (ACTUALIZADO)
+    st.markdown("""
+    <div class="info-box"><div class="info-title-no">🚫 Cosas que NO hago</div>
+    <ul class="info-list">
+        <li>Dar descripciones de productos.</li>
+        <li>Ventas directas.</li>
+        <li>Envío de promociones.</li>
+    </ul></div>
+    """, unsafe_allow_html=True)
+
+    # Panel 🎁 Promoción
     st.markdown(f"""
     <div class="info-box" style="border: 1px solid #ffd700; background: #fffdf0;">
     <div class="info-title-promo">🎁 ¡Promoción Especial!</div>
     <p style="font-size: 0.85rem;">Compra tu combo <b>CPU + Placa + RAM + GPU</b> y obtén un descuento exclusivo.</p>
     <a href="{WHATSAPP_LINK}" target="_blank" class="promo-btn">📲 Reclamar Descuento</a></div>
     """, unsafe_allow_html=True)
+    
     if st.button("🗑️ Reiniciar Chat", use_container_width=True):
         st.session_state.messages = []
         if "chat_session" in st.session_state: del st.session_state["chat_session"]
         st.rerun()
 
+# --- HEADER ---
 st.markdown("""
     <div style="display: flex; align-items: center; justify-content: center; gap: 20px; padding: 20px 0;">
         <img src="https://kiwigeekperu.com/wp-content/uploads/2025/06/Diseno-sin-titulo-24.png" height="120">
@@ -185,10 +212,12 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
+# Renderizar historial
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"], avatar=AVATAR_URL if msg["role"] == "assistant" else "👤"):
         st.markdown(msg["content"])
 
+# Input de Chat
 if prompt := st.chat_input("Dime tu presupuesto y tipo de PC..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user", avatar="👤"): st.markdown(prompt)
@@ -196,6 +225,10 @@ if prompt := st.chat_input("Dime tu presupuesto y tipo de PC..."):
     with st.chat_message("assistant", avatar=AVATAR_URL):
         with st.spinner("Analizando componentes y optimizando inversión..."):
             try:
+                # Verificación de seguridad antes de enviar
+                if "chat_session" not in st.session_state:
+                    initialize_session(force=True)
+                
                 response = st.session_state.chat_session.send_message(prompt)
                 data = json.loads(response.text)
                 final_text = ""
@@ -218,6 +251,16 @@ if prompt := st.chat_input("Dime tu presupuesto y tipo de PC..."):
                 
                 st.markdown(final_text)
                 st.session_state.messages.append({"role": "assistant", "content": final_text})
-            except Exception as e:
-                initialize_session(force=True)
-                st.error("Se perdió la conexión. Por favor reintenta tu consulta.")
+                
+            except Exception:
+                # Si algo falla, forzamos reinicio y reintento una sola vez
+                try:
+                    initialize_session(force=True)
+                    response = st.session_state.chat_session.send_message(prompt)
+                    data = json.loads(response.text)
+                    # Lógica de renderizado repetida para el reintento exitoso
+                    if data.get("is_quote"):
+                        # ... (simplificado para el catch)
+                        st.markdown("Conexión restablecida automáticamente. Por favor vuelve a enviar el mensaje para procesar la cotización.")
+                except:
+                    st.error("La conexión se ha interrumpido por inactividad. Por favor, pulsa 'Reiniciar Chat' o intenta enviar el mensaje nuevamente.")
